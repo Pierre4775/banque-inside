@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { supabase } from '../supabase'
 
 export default function SaisieDonnees() {
@@ -6,13 +6,37 @@ export default function SaisieDonnees() {
   const [depenses, setDepenses] = useState({ logement: '', alimentation: '', transports: '', loisirs: '', sante: '', autres: '' })
   const [credits, setCredits] = useState({ mensualite: '', duree: '' })
   const [message, setMessage] = useState('')
+  const [loading, setLoading] = useState(false)
 
   const totalDepenses = Object.values(depenses).reduce((a, b) => a + (parseFloat(b) || 0), 0)
   const totalRevenus = Object.values(revenus).reduce((a, b) => a + (parseFloat(b) || 0), 0)
   const epargne = totalRevenus - totalDepenses
 
+  useEffect(() => {
+    const charger = async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
+      const { data } = await supabase
+        .from('profils_financiers')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single()
+      if (data) {
+        setRevenus({ salaire: data.salaire || '', autres: data.autres_revenus || '' })
+        setDepenses({ logement: data.logement || '', alimentation: data.alimentation || '', transports: data.transports || '', loisirs: data.loisirs || '', sante: data.sante || '', autres: data.autres_depenses || '' })
+        setCredits({ mensualite: data.mensualite_credit || '', duree: '' })
+      }
+    }
+    charger()
+  }, [])
+
   const sauvegarder = async () => {
-    const { error } = await supabase.from('profils_financiers').insert([{
+    setLoading(true)
+    const { data: { user } } = await supabase.auth.getUser()
+    const { error } = await supabase.from('profils_financiers').upsert([{
+      user_id: user.id,
       salaire: parseFloat(revenus.salaire) || 0,
       autres_revenus: parseFloat(revenus.autres) || 0,
       logement: parseFloat(depenses.logement) || 0,
@@ -22,9 +46,10 @@ export default function SaisieDonnees() {
       sante: parseFloat(depenses.sante) || 0,
       autres_depenses: parseFloat(depenses.autres) || 0,
       mensualite_credit: parseFloat(credits.mensualite) || 0,
-    }])
+    }], { onConflict: 'user_id' })
     if (error) setMessage('Erreur : ' + error.message)
     else setMessage('Donnees sauvegardees !')
+    setLoading(false)
   }
 
   const inputStyle = { width:'100%', border:'1px solid #d1d5db', borderRadius:'8px', padding:'10px 12px', fontSize:'14px', boxSizing:'border-box' }
@@ -105,8 +130,8 @@ export default function SaisieDonnees() {
         )}
       </div>
 
-      <button onClick={sauvegarder} style={{width:'100%', background:'#2563eb', color:'white', padding:'14px', borderRadius:'12px', border:'none', fontSize:'16px', fontWeight:'500', cursor:'pointer'}}>
-        Sauvegarder et calculer mon score
+      <button onClick={sauvegarder} disabled={loading} style={{width:'100%', background:'#2563eb', color:'white', padding:'14px', borderRadius:'12px', border:'none', fontSize:'16px', fontWeight:'500', cursor:'pointer', opacity: loading ? 0.7 : 1}}>
+        {loading ? 'Sauvegarde...' : 'Sauvegarder et calculer mon score'}
       </button>
     </div>
   )
