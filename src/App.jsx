@@ -1,9 +1,11 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { PieChart, Pie, Cell, LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts'
 import SaisieDonnees from './pages/SaisieDonnees'
 import AnalyseBancaire from './pages/AnalyseBancaire'
 import Simulations from './pages/Simulations'
 import Alertes from './pages/Alertes'
+import Login from './pages/Login'
+import { supabase } from './supabase'
 
 const depenses = [
   { name: 'Logement', value: 1050, color: '#1e3a5f' },
@@ -219,8 +221,21 @@ function DashboardPage() {
 export default function App() {
   const [active, setActive] = useState('Dashboard')
   const [menuOpen, setMenuOpen] = useState(false)
+  const [user, setUser] = useState(null)
 
-  const isMobile = () => window.innerWidth < 768
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null)
+    })
+    supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null)
+    })
+  }, [])
+
+  const deconnecter = async () => {
+    await supabase.auth.signOut()
+    setUser(null)
+  }
 
   const renderPage = () => {
     switch(active) {
@@ -232,10 +247,11 @@ export default function App() {
     }
   }
 
+  if (!user) return <Login onLogin={() => supabase.auth.getSession().then(({ data: { session } }) => setUser(session?.user))} />
+
   return (
     <div style={S.app}>
-      {/* Sidebar — cachee sur mobile via JS */}
-      <div style={{...S.sidebar, display: isMobile() ? 'none' : 'flex'}}>
+      <div style={{...S.sidebar, display: window.innerWidth < 768 ? 'none' : 'flex'}}>
         <div style={S.sidebarHeader}>
           <div style={S.sidebarTitle}>BANQUE INSIDE</div>
           <div style={S.sidebarSub}>ANALYSE FINANCIERE PERSONNELLE</div>
@@ -254,7 +270,6 @@ export default function App() {
         </div>
       </div>
 
-      {/* Menu mobile overlay */}
       {menuOpen && (
         <div style={S.overlay}>
           <div style={S.overlayHeader}>
@@ -268,6 +283,11 @@ export default function App() {
               </button>
             ))}
           </nav>
+          <div style={{padding:'16px'}}>
+            <button onClick={deconnecter} style={{width:'100%', background:'#ef4444', color:'white', padding:'12px', borderRadius:'8px', border:'none', fontSize:'14px', cursor:'pointer'}}>
+              Se deconnecter
+            </button>
+          </div>
         </div>
       )}
 
@@ -276,11 +296,13 @@ export default function App() {
           <div style={S.headerLeft}>
             <button style={S.menuBtn} onClick={() => setMenuOpen(true)}>☰</button>
             <div>
-              <div style={S.profileLabel}>Profil</div>
-              <div style={S.profileName}>Dupont Julien</div>
+              <div style={S.profileLabel}>Connecte en tant que</div>
+              <div style={S.profileName}>{user.email}</div>
             </div>
           </div>
-          <div style={{fontSize:'12px', color:'#94a3b8'}}>BANQUE INSIDE</div>
+          <button onClick={deconnecter} style={{background:'#ef4444', color:'white', border:'none', padding:'6px 12px', borderRadius:'6px', fontSize:'12px', cursor:'pointer'}}>
+            Deconnexion
+          </button>
         </div>
         {renderPage()}
       </div>
