@@ -5,6 +5,7 @@ import AnalyseBancaire from './pages/AnalyseBancaire'
 import Simulations from './pages/Simulations'
 import Alertes from './pages/Alertes'
 import Login from './pages/Login'
+import PatrimoineNet from './pages/PatrimoineNet'
 import { supabase } from './supabase'
 
 const navItems = [
@@ -53,15 +54,17 @@ const S = {
 function DashboardPage({ profil }) {
   if (!profil) return <div style={{padding:'24px', color:'#6b7280'}}>Chargement...</div>
 
-  const totalRevenus = Math.round((profil.salaire || 0) + (profil.autres_revenus || 0))
+  const totalRevenus = Math.round((profil.salaire || 0) + (profil.revenus_fonciers || 0) + (profil.autres_revenus || 0))
   const totalDepenses = Math.round(
     (profil.logement || 0) + (profil.alimentation || 0) + (profil.transports || 0) +
-    (profil.loisirs || 0) + (profil.sante || 0) + (profil.autres_depenses || 0) +
-    (profil.mensualite_credit || 0)
+    (profil.loisirs || 0) + (profil.sante || 0) + (profil.autres_depenses || 0)
   )
-  const epargne = totalRevenus - totalDepenses
+  const creditsImmo = profil.credits_immo || []
+  const creditsAutre = profil.credits_autre || []
+  const totalMensualites = Math.round([...creditsImmo, ...creditsAutre].reduce((a, c) => a + (parseFloat(c.mensualite) || 0), 0))
+  const epargne = totalRevenus - totalDepenses - totalMensualites
   const tauxEpargne = totalRevenus > 0 ? Math.round((epargne / totalRevenus) * 100) : 0
-  const tauxEndettement = totalRevenus > 0 ? Math.round(((profil.mensualite_credit || 0) / totalRevenus) * 100) : 0
+  const tauxEndettement = totalRevenus > 0 ? Math.round((totalMensualites / totalRevenus) * 100) : 0
   const score = Math.min(100, Math.max(0, Math.round(50 + tauxEpargne - tauxEndettement)))
   const capaciteEmprunt = Math.round(totalRevenus * 0.33 * 12 * 20)
   const mensualiteMax = Math.round(totalRevenus * 0.33)
@@ -232,6 +235,7 @@ export default function App() {
     switch(active) {
       case 'Saisie donnees': return <SaisieDonnees/>
       case 'Analyse bancaire': return <AnalyseBancaire/>
+      case 'Patrimoine net': return <PatrimoineNet/>
       case 'Simulations': return <Simulations/>
       case 'Alertes': return <Alertes/>
       default: return <DashboardPage profil={profil}/>
