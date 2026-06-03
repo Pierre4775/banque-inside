@@ -8,8 +8,8 @@ export default function SaisieDonnees() {
   const [message, setMessage] = useState('')
   const [loading, setLoading] = useState(false)
 
-  const totalDepenses = Object.values(depenses).reduce((a, b) => a + (parseFloat(b) || 0), 0)
-  const totalRevenus = Object.values(revenus).reduce((a, b) => a + (parseFloat(b) || 0), 0)
+  const totalDepenses = Math.round(Object.values(depenses).reduce((a, b) => a + (parseFloat(b) || 0), 0))
+  const totalRevenus = Math.round(Object.values(revenus).reduce((a, b) => a + (parseFloat(b) || 0), 0))
   const epargne = totalRevenus - totalDepenses
 
   useEffect(() => {
@@ -22,11 +22,11 @@ export default function SaisieDonnees() {
         .eq('user_id', user.id)
         .order('created_at', { ascending: false })
         .limit(1)
-        .single()
-      if (data) {
-        setRevenus({ salaire: data.salaire || '', autres: data.autres_revenus || '' })
-        setDepenses({ logement: data.logement || '', alimentation: data.alimentation || '', transports: data.transports || '', loisirs: data.loisirs || '', sante: data.sante || '', autres: data.autres_depenses || '' })
-        setCredits({ mensualite: data.mensualite_credit || '', duree: '' })
+      if (data && data.length > 0) {
+        const d = data[0]
+        setRevenus({ salaire: d.salaire || '', autres: d.autres_revenus || '' })
+        setDepenses({ logement: d.logement || '', alimentation: d.alimentation || '', transports: d.transports || '', loisirs: d.loisirs || '', sante: d.sante || '', autres: d.autres_depenses || '' })
+        setCredits({ mensualite: d.mensualite_credit || '', duree: '' })
       }
     }
     charger()

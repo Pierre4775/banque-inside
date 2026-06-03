@@ -7,25 +7,6 @@ import Alertes from './pages/Alertes'
 import Login from './pages/Login'
 import { supabase } from './supabase'
 
-const depenses = [
-  { name: 'Logement', value: 1050, color: '#1e3a5f' },
-  { name: 'Alimentation', value: 600, color: '#2563eb' },
-  { name: 'Transports', value: 450, color: '#16a34a' },
-  { name: 'Loisirs', value: 300, color: '#ca8a04' },
-  { name: 'Sante', value: 300, color: '#dc2626' },
-  { name: 'Autres', value: 300, color: '#9ca3af' },
-]
-
-const patrimoine = [
-  { mois: 'Juin', valeur: 18000 },
-  { mois: 'Aout', valeur: 22000 },
-  { mois: 'Oct', valeur: 28000 },
-  { mois: 'Dec', valeur: 32000 },
-  { mois: 'Fevr', valeur: 38000 },
-  { mois: 'Avr', valeur: 42000 },
-  { mois: 'Juin', valeur: 45200 },
-]
-
 const navItems = [
   { label: 'Dashboard' },
   { label: 'Saisie donnees', sub: 'Revenus, depenses, credits' },
@@ -69,7 +50,41 @@ const S = {
   muted: { fontSize:'12px', color:'#9ca3af' },
 }
 
-function DashboardPage() {
+function DashboardPage({ profil }) {
+  if (!profil) return <div style={{padding:'24px', color:'#6b7280'}}>Chargement...</div>
+
+  const totalRevenus = Math.round((profil.salaire || 0) + (profil.autres_revenus || 0))
+  const totalDepenses = Math.round(
+    (profil.logement || 0) + (profil.alimentation || 0) + (profil.transports || 0) +
+    (profil.loisirs || 0) + (profil.sante || 0) + (profil.autres_depenses || 0) +
+    (profil.mensualite_credit || 0)
+  )
+  const epargne = totalRevenus - totalDepenses
+  const tauxEpargne = totalRevenus > 0 ? Math.round((epargne / totalRevenus) * 100) : 0
+  const tauxEndettement = totalRevenus > 0 ? Math.round(((profil.mensualite_credit || 0) / totalRevenus) * 100) : 0
+  const score = Math.min(100, Math.max(0, Math.round(50 + tauxEpargne - tauxEndettement)))
+  const capaciteEmprunt = Math.round(totalRevenus * 0.33 * 12 * 20)
+  const mensualiteMax = Math.round(totalRevenus * 0.33)
+
+  const depensesData = [
+    { name: 'Logement', value: profil.logement || 0, color: '#1e3a5f' },
+    { name: 'Alimentation', value: profil.alimentation || 0, color: '#2563eb' },
+    { name: 'Transports', value: profil.transports || 0, color: '#16a34a' },
+    { name: 'Loisirs', value: profil.loisirs || 0, color: '#ca8a04' },
+    { name: 'Sante', value: profil.sante || 0, color: '#dc2626' },
+    { name: 'Autres', value: profil.autres_depenses || 0, color: '#9ca3af' },
+  ].filter(d => d.value > 0)
+
+  const patrimoine = [
+    { mois: 'M-6', valeur: Math.round(epargne * 1) },
+    { mois: 'M-5', valeur: Math.round(epargne * 2) },
+    { mois: 'M-4', valeur: Math.round(epargne * 3) },
+    { mois: 'M-3', valeur: Math.round(epargne * 4) },
+    { mois: 'M-2', valeur: Math.round(epargne * 5) },
+    { mois: 'M-1', valeur: Math.round(epargne * 6) },
+    { mois: 'Auj', valeur: Math.round(epargne * 7) },
+  ]
+
   return (
     <div style={S.page}>
       <div style={S.grid4}>
@@ -79,34 +94,29 @@ function DashboardPage() {
             <div style={{position:'relative', width:'96px', height:'96px'}}>
               <svg viewBox="0 0 100 100" style={{width:'100%', height:'100%', transform:'rotate(-90deg)'}}>
                 <circle cx="50" cy="50" r="40" fill="none" stroke="#e5e7eb" strokeWidth="10"/>
-                <circle cx="50" cy="50" r="40" fill="none" stroke="#16a34a" strokeWidth="10" strokeDasharray={`${82*2.51} ${100*2.51}`}/>
+                <circle cx="50" cy="50" r="40" fill="none" stroke="#16a34a" strokeWidth="10" strokeDasharray={`${score*2.51} ${100*2.51}`}/>
               </svg>
               <div style={{position:'absolute', inset:0, display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center'}}>
-                <span style={{fontSize:'24px', fontWeight:'bold'}}>82</span>
+                <span style={{fontSize:'24px', fontWeight:'bold'}}>{score}</span>
                 <span style={{fontSize:'12px', color:'#9ca3af'}}>/100</span>
               </div>
             </div>
-            <div style={{color:'#16a34a', fontWeight:'600', marginTop:'4px'}}>Profil solide</div>
-            <div style={{fontSize:'12px', color:'#22c55e', textAlign:'center', marginTop:'4px'}}>Votre profil est bon !</div>
+            <div style={{color:'#16a34a', fontWeight:'600', marginTop:'4px'}}>{score >= 70 ? 'Profil solide' : score >= 50 ? 'Profil correct' : 'A ameliorer'}</div>
           </div>
         </div>
 
         <div style={S.card}>
-          <div style={S.cardTitle}>Patrimoine net</div>
-          <div style={S.bigNum}>45 200 EUR</div>
-          <div style={S.green}>+12% / an</div>
-          <div style={S.muted}>vs mois dernier</div>
-          <ResponsiveContainer width="100%" height={60}>
-            <LineChart data={patrimoine}>
-              <Line type="monotone" dataKey="valeur" stroke="#2563eb" dot={false} strokeWidth={2}/>
-            </LineChart>
-          </ResponsiveContainer>
+          <div style={S.cardTitle}>Epargne mensuelle</div>
+          <div style={S.bigNum}>{epargne.toLocaleString()} EUR</div>
+          <div style={{...S.green, color: tauxEpargne >= 15 ? '#22c55e' : '#f59e0b'}}>{tauxEpargne}%</div>
+          <div style={S.muted}>Taux epargne</div>
+          <div style={{marginTop:'12px', padding:'8px', background:'#f9fafb', borderRadius:'8px', fontSize:'12px', color:'#6b7280', textAlign:'center'}}>Objectif : 15 a 20%</div>
         </div>
 
         <div style={S.card}>
           <div style={S.cardTitle}>Taux endettement</div>
-          <div style={S.bigNum}>28%</div>
-          <div style={S.green}>OK</div>
+          <div style={S.bigNum}>{tauxEndettement}%</div>
+          <div style={{...S.green, color: tauxEndettement <= 33 ? '#22c55e' : '#ef4444'}}>{tauxEndettement <= 33 ? 'OK' : 'Eleve'}</div>
           <div style={{marginTop:'12px', height:'12px', borderRadius:'9999px', overflow:'hidden', display:'flex'}}>
             <div style={{background:'#22c55e', flex:1}}/>
             <div style={{background:'#facc15', width:'16%'}}/>
@@ -118,37 +128,39 @@ function DashboardPage() {
         </div>
 
         <div style={S.card}>
-          <div style={S.cardTitle}>Epargne mensuelle</div>
-          <div style={S.bigNum}>850 EUR</div>
-          <div style={S.green}>18%</div>
-          <div style={S.muted}>Taux epargne</div>
-          <div style={{marginTop:'12px', padding:'8px', background:'#f9fafb', borderRadius:'8px', fontSize:'12px', color:'#6b7280', textAlign:'center'}}>Objectif : 15 a 20%</div>
+          <div style={S.cardTitle}>Revenus / Depenses</div>
+          <div style={{fontSize:'14px', color:'#6b7280', marginBottom:'4px'}}>Revenus</div>
+          <div style={{fontSize:'22px', fontWeight:'bold', color:'#1d4ed8'}}>{totalRevenus.toLocaleString()} EUR</div>
+          <div style={{fontSize:'14px', color:'#6b7280', marginTop:'8px', marginBottom:'4px'}}>Depenses</div>
+          <div style={{fontSize:'22px', fontWeight:'bold', color:'#dc2626'}}>{totalDepenses.toLocaleString()} EUR</div>
         </div>
       </div>
 
       <div style={S.grid3}>
         <div style={S.card}>
           <div style={S.cardTitle}>Depenses mensuelles</div>
-          <div style={{display:'flex', alignItems:'center', gap:'16px'}}>
-            <PieChart width={120} height={120}>
-              <Pie data={depenses} cx={55} cy={55} innerRadius={35} outerRadius={55} dataKey="value">
-                {depenses.map((e,i) => <Cell key={i} fill={e.color}/>)}
-              </Pie>
-            </PieChart>
-            <div style={{fontSize:'12px', display:'flex', flexDirection:'column', gap:'4px'}}>
-              {depenses.map(d => (
-                <div key={d.name} style={{display:'flex', alignItems:'center', gap:'4px'}}>
-                  <div style={{width:'8px', height:'8px', borderRadius:'50%', background:d.color}}/>
-                  <span>{d.name}</span>
-                  <span style={{marginLeft:'4px', fontWeight:'500'}}>{d.value}</span>
-                </div>
-              ))}
+          {depensesData.length > 0 ? (
+            <div style={{display:'flex', alignItems:'center', gap:'16px'}}>
+              <PieChart width={120} height={120}>
+                <Pie data={depensesData} cx={55} cy={55} innerRadius={35} outerRadius={55} dataKey="value">
+                  {depensesData.map((e,i) => <Cell key={i} fill={e.color}/>)}
+                </Pie>
+              </PieChart>
+              <div style={{fontSize:'12px', display:'flex', flexDirection:'column', gap:'4px'}}>
+                {depensesData.map(d => (
+                  <div key={d.name} style={{display:'flex', alignItems:'center', gap:'4px'}}>
+                    <div style={{width:'8px', height:'8px', borderRadius:'50%', background:d.color}}/>
+                    <span>{d.name}</span>
+                    <span style={{marginLeft:'4px', fontWeight:'500'}}>{d.value}</span>
+                  </div>
+                ))}
+              </div>
             </div>
-          </div>
+          ) : <div style={{color:'#9ca3af', fontSize:'14px'}}>Aucune depense saisie</div>}
         </div>
 
         <div style={S.card}>
-          <div style={S.cardTitle}>Evolution patrimoine</div>
+          <div style={S.cardTitle}>Evolution epargne (projection)</div>
           <ResponsiveContainer width="100%" height={160}>
             <LineChart data={patrimoine}>
               <XAxis dataKey="mois" tick={{fontSize:10}}/>
@@ -160,57 +172,19 @@ function DashboardPage() {
         </div>
 
         <div style={S.card}>
-          <div style={S.cardTitle}>Projection 10 ans</div>
-          <ResponsiveContainer width="100%" height={160}>
-            <LineChart data={[
-              {an:'1',p:5000,r:5000,o:5000},
-              {an:'4',p:28000,r:35000,o:50000},
-              {an:'7',p:55000,r:90000,o:150000},
-              {an:'10',p:95000,r:168000,o:267000},
-            ]}>
-              <XAxis dataKey="an" tick={{fontSize:10}}/>
-              <YAxis tick={{fontSize:10}}/>
-              <Tooltip/>
-              <Line type="monotone" dataKey="p" stroke="#2563eb" strokeWidth={2} dot={false}/>
-              <Line type="monotone" dataKey="r" stroke="#16a34a" strokeWidth={2} dot={false}/>
-              <Line type="monotone" dataKey="o" stroke="#ca8a04" strokeWidth={2} dot={false}/>
-            </LineChart>
-          </ResponsiveContainer>
-        </div>
-      </div>
-
-      <div style={S.grid2}>
-        <div style={S.card}>
-          <div style={S.cardTitle}>Alertes</div>
-          <div style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:'12px'}}>
-            {[
-              {title:'Epargne', msg:'Taux correct mais ameliorable.', warn:true},
-              {title:'Charges fixes', msg:'57% de vos revenus.', warn:true},
-              {title:'Stabilite revenus', msg:'Bonne stabilite sur 12 mois.', warn:false},
-              {title:'Fonds urgence', msg:'Couvre 6,2 mois de depenses.', warn:false},
-            ].map(a => (
-              <div key={a.title} style={{padding:'12px', borderRadius:'8px', fontSize:'12px', background:a.warn?'#fefce8':'#f0fdf4', border:`1px solid ${a.warn?'#fde047':'#86efac'}`}}>
-                <div style={{fontWeight:'600', marginBottom:'4px'}}>{a.title}</div>
-                <div style={{color:'#4b5563'}}>{a.msg}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div style={S.card}>
           <div style={S.cardTitle}>Capacite emprunt</div>
           <div style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:'16px', marginTop:'16px'}}>
             <div style={{textAlign:'center'}}>
               <div style={{fontSize:'12px', color:'#6b7280', marginBottom:'4px'}}>Montant empruntable</div>
-              <div style={{fontSize:'26px', fontWeight:'bold'}}>182 000 EUR</div>
+              <div style={{fontSize:'22px', fontWeight:'bold'}}>{capaciteEmprunt.toLocaleString()} EUR</div>
             </div>
             <div style={{textAlign:'center'}}>
               <div style={{fontSize:'12px', color:'#6b7280', marginBottom:'4px'}}>Mensualite max</div>
-              <div style={{fontSize:'26px', fontWeight:'bold'}}>890 EUR</div>
+              <div style={{fontSize:'22px', fontWeight:'bold'}}>{mensualiteMax.toLocaleString()} EUR</div>
             </div>
           </div>
           <div style={{marginTop:'16px', padding:'12px', background:'#f9fafb', borderRadius:'8px', fontSize:'12px', color:'#6b7280', textAlign:'center'}}>
-            Taux endettement apres projet : 32%
+            Taux endettement apres projet : {Math.min(100, tauxEndettement + 10)}%
           </div>
         </div>
       </div>
@@ -222,15 +196,32 @@ export default function App() {
   const [active, setActive] = useState('Dashboard')
   const [menuOpen, setMenuOpen] = useState(false)
   const [user, setUser] = useState(null)
+  const [profil, setProfil] = useState(null)
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null)
+      if (session?.user) chargerProfil(session.user.id)
     })
     supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null)
+      if (session?.user) chargerProfil(session.user.id)
     })
   }, [])
+
+  useEffect(() => {
+    if (user && active === 'Dashboard') chargerProfil(user.id)
+  }, [active])
+
+  const chargerProfil = async (userId) => {
+    const { data } = await supabase
+      .from('profils_financiers')
+      .select('*')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false })
+      .limit(1)
+    if (data && data.length > 0) setProfil(data[0])
+  }
 
   const deconnecter = async () => {
     await supabase.auth.signOut()
@@ -243,7 +234,7 @@ export default function App() {
       case 'Analyse bancaire': return <AnalyseBancaire/>
       case 'Simulations': return <Simulations/>
       case 'Alertes': return <Alertes/>
-      default: return <DashboardPage/>
+      default: return <DashboardPage profil={profil}/>
     }
   }
 
