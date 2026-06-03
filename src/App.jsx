@@ -37,80 +37,84 @@ const navItems = [
 
 function DashboardPage() {
   return (
-    <div className="p-6 space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
-        <div className="bg-white rounded-xl p-4 shadow-sm">
-          <div className="text-xs font-semibold text-gray-500 uppercase mb-3">Score financier global</div>
-          <div className="flex flex-col items-center">
-            <div className="relative w-24 h-24">
-              <svg viewBox="0 0 100 100" className="w-full h-full -rotate-90">
+    <div style={{padding: '24px', display: 'flex', flexDirection: 'column', gap: '24px'}}>
+      <div style={{display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px'}}>
+        <div style={{background: 'white', borderRadius: '12px', padding: '16px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)'}}>
+          <div style={{fontSize: '11px', fontWeight: '600', color: '#6b7280', textTransform: 'uppercase', marginBottom: '12px'}}>Score financier global</div>
+          <div style={{display: 'flex', flexDirection: 'column', alignItems: 'center'}}>
+            <div style={{position: 'relative', width: '96px', height: '96px'}}>
+              <svg viewBox="0 0 100 100" style={{width: '100%', height: '100%', transform: 'rotate(-90deg)'}}>
                 <circle cx="50" cy="50" r="40" fill="none" stroke="#e5e7eb" strokeWidth="10"/>
                 <circle cx="50" cy="50" r="40" fill="none" stroke="#16a34a" strokeWidth="10" strokeDasharray={`${82 * 2.51} ${100 * 2.51}`}/>
               </svg>
-              <div className="absolute inset-0 flex flex-col items-center justify-center">
-                <span className="text-2xl font-bold">82</span>
-                <span className="text-xs text-gray-400">/ 100</span>
+              <div style={{position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center'}}>
+                <span style={{fontSize: '24px', fontWeight: 'bold'}}>82</span>
+                <span style={{fontSize: '12px', color: '#9ca3af'}}>/ 100</span>
               </div>
             </div>
-            <div className="text-green-600 font-semibold mt-1">Profil solide</div>
-            <div className="text-xs text-green-500 text-center mt-1">Votre profil financier est bon. Continuez ainsi !</div>
+            <div style={{color: '#16a34a', fontWeight: '600', marginTop: '4px'}}>Profil solide</div>
+            <div style={{fontSize: '12px', color: '#22c55e', textAlign: 'center', marginTop: '4px'}}>Votre profil financier est bon. Continuez ainsi !</div>
           </div>
         </div>
-        <div className="bg-white rounded-xl p-4 shadow-sm">
-          <div className="text-xs font-semibold text-gray-500 uppercase mb-3">Patrimoine net</div>
-          <div className="text-3xl font-bold">45 200 EUR</div>
-          <div className="text-green-500 text-sm font-medium mt-1">+12% / an</div>
-          <div className="text-xs text-gray-400">vs mois dernier</div>
+
+        <div style={{background: 'white', borderRadius: '12px', padding: '16px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)'}}>
+          <div style={{fontSize: '11px', fontWeight: '600', color: '#6b7280', textTransform: 'uppercase', marginBottom: '12px'}}>Patrimoine net</div>
+          <div style={{fontSize: '30px', fontWeight: 'bold'}}>45 200 EUR</div>
+          <div style={{color: '#22c55e', fontSize: '14px', fontWeight: '500', marginTop: '4px'}}>+12% / an</div>
+          <div style={{fontSize: '12px', color: '#9ca3af'}}>vs mois dernier</div>
           <ResponsiveContainer width="100%" height={60}>
             <LineChart data={patrimoine}>
               <Line type="monotone" dataKey="valeur" stroke="#2563eb" dot={false} strokeWidth={2}/>
             </LineChart>
           </ResponsiveContainer>
-          <div className="text-xs text-gray-400 text-center">Evolution sur 12 mois</div>
         </div>
-        <div className="bg-white rounded-xl p-4 shadow-sm">
-          <div className="text-xs font-semibold text-gray-500 uppercase mb-3">Taux endettement</div>
-          <div className="text-3xl font-bold">28%</div>
-          <div className="text-green-500 text-sm font-medium mt-1">OK</div>
-          <div className="mt-3 h-3 rounded-full overflow-hidden flex">
-            <div className="bg-green-500 flex-1"/>
-            <div className="bg-yellow-400 w-1/6"/>
-            <div className="bg-red-500 w-1/4"/>
+
+        <div style={{background: 'white', borderRadius: '12px', padding: '16px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)'}}>
+          <div style={{fontSize: '11px', fontWeight: '600', color: '#6b7280', textTransform: 'uppercase', marginBottom: '12px'}}>Taux endettement</div>
+          <div style={{fontSize: '30px', fontWeight: 'bold'}}>28%</div>
+          <div style={{color: '#22c55e', fontSize: '14px', fontWeight: '500', marginTop: '4px'}}>OK</div>
+          <div style={{marginTop: '12px', height: '12px', borderRadius: '9999px', overflow: 'hidden', display: 'flex'}}>
+            <div style={{background: '#22c55e', flex: 1}}/>
+            <div style={{background: '#facc15', width: '16%'}}/>
+            <div style={{background: '#ef4444', width: '25%'}}/>
           </div>
-          <div className="flex justify-between text-xs text-gray-400 mt-1">
+          <div style={{display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#9ca3af', marginTop: '4px'}}>
             <span>0%</span><span>33%</span><span>50%</span><span>100%</span>
           </div>
         </div>
-        <div className="bg-white rounded-xl p-4 shadow-sm">
-          <div className="text-xs font-semibold text-gray-500 uppercase mb-3">Epargne mensuelle</div>
-          <div className="text-3xl font-bold">850 EUR</div>
-          <div className="text-green-500 text-sm font-medium mt-1">18%</div>
-          <div className="text-xs text-gray-400">Taux epargne</div>
-          <div className="mt-3 p-2 bg-gray-50 rounded-lg text-xs text-gray-500 text-center">Objectif : 15 a 20%</div>
+
+        <div style={{background: 'white', borderRadius: '12px', padding: '16px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)'}}>
+          <div style={{fontSize: '11px', fontWeight: '600', color: '#6b7280', textTransform: 'uppercase', marginBottom: '12px'}}>Epargne mensuelle</div>
+          <div style={{fontSize: '30px', fontWeight: 'bold'}}>850 EUR</div>
+          <div style={{color: '#22c55e', fontSize: '14px', fontWeight: '500', marginTop: '4px'}}>18%</div>
+          <div style={{fontSize: '12px', color: '#9ca3af'}}>Taux epargne</div>
+          <div style={{marginTop: '12px', padding: '8px', background: '#f9fafb', borderRadius: '8px', fontSize: '12px', color: '#6b7280', textAlign: 'center'}}>Objectif : 15 a 20%</div>
         </div>
       </div>
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <div className="bg-white rounded-xl p-4 shadow-sm">
-          <div className="text-xs font-semibold text-gray-500 uppercase mb-3">Depenses mensuelles</div>
-          <div className="flex items-center gap-4">
+
+      <div style={{display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '16px'}}>
+        <div style={{background: 'white', borderRadius: '12px', padding: '16px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)'}}>
+          <div style={{fontSize: '11px', fontWeight: '600', color: '#6b7280', textTransform: 'uppercase', marginBottom: '12px'}}>Depenses mensuelles</div>
+          <div style={{display: 'flex', alignItems: 'center', gap: '16px'}}>
             <PieChart width={120} height={120}>
               <Pie data={depenses} cx={55} cy={55} innerRadius={35} outerRadius={55} dataKey="value">
                 {depenses.map((entry, i) => <Cell key={i} fill={entry.color}/>)}
               </Pie>
             </PieChart>
-            <div className="text-xs space-y-1">
+            <div style={{fontSize: '12px', display: 'flex', flexDirection: 'column', gap: '4px'}}>
               {depenses.map(d => (
-                <div key={d.name} className="flex items-center gap-1">
-                  <div className="w-2 h-2 rounded-full" style={{background: d.color}}/>
-                  <span className="text-gray-600">{d.name}</span>
-                  <span className="ml-2 font-medium">{d.value}</span>
+                <div key={d.name} style={{display: 'flex', alignItems: 'center', gap: '4px'}}>
+                  <div style={{width: '8px', height: '8px', borderRadius: '50%', background: d.color}}/>
+                  <span style={{color: '#4b5563'}}>{d.name}</span>
+                  <span style={{marginLeft: '8px', fontWeight: '500'}}>{d.value}</span>
                 </div>
               ))}
             </div>
           </div>
         </div>
-        <div className="bg-white rounded-xl p-4 shadow-sm">
-          <div className="text-xs font-semibold text-gray-500 uppercase mb-3">Evolution patrimoine</div>
+
+        <div style={{background: 'white', borderRadius: '12px', padding: '16px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)'}}>
+          <div style={{fontSize: '11px', fontWeight: '600', color: '#6b7280', textTransform: 'uppercase', marginBottom: '12px'}}>Evolution patrimoine</div>
           <ResponsiveContainer width="100%" height={160}>
             <LineChart data={patrimoine}>
               <XAxis dataKey="mois" tick={{fontSize: 10}}/>
@@ -120,8 +124,9 @@ function DashboardPage() {
             </LineChart>
           </ResponsiveContainer>
         </div>
-        <div className="bg-white rounded-xl p-4 shadow-sm">
-          <div className="text-xs font-semibold text-gray-500 uppercase mb-3">Projection 10 ans</div>
+
+        <div style={{background: 'white', borderRadius: '12px', padding: '16px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)'}}>
+          <div style={{fontSize: '11px', fontWeight: '600', color: '#6b7280', textTransform: 'uppercase', marginBottom: '12px'}}>Projection 10 ans</div>
           <ResponsiveContainer width="100%" height={160}>
             <LineChart data={[
               {an:'1',prudent:5000,realiste:5000,optimiste:5000},
@@ -139,36 +144,38 @@ function DashboardPage() {
           </ResponsiveContainer>
         </div>
       </div>
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <div className="bg-white rounded-xl p-4 shadow-sm">
-          <div className="text-xs font-semibold text-gray-500 uppercase mb-3">Alertes</div>
-          <div className="grid grid-cols-2 gap-3">
+
+      <div style={{display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '16px'}}>
+        <div style={{background: 'white', borderRadius: '12px', padding: '16px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)'}}>
+          <div style={{fontSize: '11px', fontWeight: '600', color: '#6b7280', textTransform: 'uppercase', marginBottom: '12px'}}>Alertes</div>
+          <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px'}}>
             {[
-              { icon: 'WARN', title: 'Epargne', msg: "Taux correct mais ameliorable.", warn: true },
-              { icon: 'WARN', title: 'Charges fixes', msg: "57% de vos revenus.", warn: true },
-              { icon: 'OK', title: 'Stabilite revenus', msg: "Bonne stabilite sur 12 mois.", warn: false },
-              { icon: 'OK', title: 'Fonds urgence', msg: "Couvre 6,2 mois de depenses.", warn: false },
+              { title: 'Epargne', msg: "Taux correct mais ameliorable.", warn: true },
+              { title: 'Charges fixes', msg: "57% de vos revenus.", warn: true },
+              { title: 'Stabilite revenus', msg: "Bonne stabilite sur 12 mois.", warn: false },
+              { title: 'Fonds urgence', msg: "Couvre 6,2 mois de depenses.", warn: false },
             ].map(a => (
-              <div key={a.title} className={`p-3 rounded-lg text-xs ${a.warn ? 'bg-yellow-50 border border-yellow-200' : 'bg-green-50 border border-green-200'}`}>
-                <div className="font-semibold mb-1">{a.title}</div>
-                <div className="text-gray-600">{a.msg}</div>
+              <div key={a.title} style={{padding: '12px', borderRadius: '8px', fontSize: '12px', background: a.warn ? '#fefce8' : '#f0fdf4', border: `1px solid ${a.warn ? '#fde047' : '#86efac'}`}}>
+                <div style={{fontWeight: '600', marginBottom: '4px'}}>{a.title}</div>
+                <div style={{color: '#4b5563'}}>{a.msg}</div>
               </div>
             ))}
           </div>
         </div>
-        <div className="bg-white rounded-xl p-4 shadow-sm">
-          <div className="text-xs font-semibold text-gray-500 uppercase mb-3">Capacite emprunt</div>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-4">
-            <div className="text-center">
-              <div className="text-xs text-gray-500 mb-1">Montant empruntable</div>
-              <div className="text-3xl font-bold">182 000 EUR</div>
+
+        <div style={{background: 'white', borderRadius: '12px', padding: '16px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)'}}>
+          <div style={{fontSize: '11px', fontWeight: '600', color: '#6b7280', textTransform: 'uppercase', marginBottom: '12px'}}>Capacite emprunt</div>
+          <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginTop: '16px'}}>
+            <div style={{textAlign: 'center'}}>
+              <div style={{fontSize: '12px', color: '#6b7280', marginBottom: '4px'}}>Montant empruntable</div>
+              <div style={{fontSize: '28px', fontWeight: 'bold'}}>182 000 EUR</div>
             </div>
-            <div className="text-center">
-              <div className="text-xs text-gray-500 mb-1">Mensualite maximale</div>
-              <div className="text-3xl font-bold">890 EUR<span className="text-sm font-normal text-gray-500"> / mois</span></div>
+            <div style={{textAlign: 'center'}}>
+              <div style={{fontSize: '12px', color: '#6b7280', marginBottom: '4px'}}>Mensualite maximale</div>
+              <div style={{fontSize: '28px', fontWeight: 'bold'}}>890 EUR<span style={{fontSize: '14px', fontWeight: 'normal', color: '#6b7280'}}> / mois</span></div>
             </div>
           </div>
-          <div className="mt-4 p-3 bg-gray-50 rounded-lg text-xs text-gray-500 text-center">
+          <div style={{marginTop: '16px', padding: '12px', background: '#f9fafb', borderRadius: '8px', fontSize: '12px', color: '#6b7280', textAlign: 'center'}}>
             Taux endettement apres projet : 32% (zone saine)
           </div>
         </div>
@@ -179,6 +186,7 @@ function DashboardPage() {
 
 export default function App() {
   const [active, setActive] = useState('Dashboard')
+  const [menuOpen, setMenuOpen] = useState(false)
 
   const renderPage = () => {
     switch(active) {
@@ -191,45 +199,56 @@ export default function App() {
   }
 
   return (
-    <div className="flex h-screen bg-gray-100 font-sans">
-      <div className="hidden md:flex md:w-64 bg-slate-900 text-white flex-col>
-        <div className="p-4 border-b border-slate-700">
-          <div className="font-bold text-lg">BANQUE INSIDE</div>
-          <div className="text-xs text-slate-400">ANALYSE FINANCIERE PERSONNELLE</div>
+    <div style={{display: 'flex', minHeight: '100vh', background: '#f3f4f6', fontFamily: 'sans-serif'}}>
+      {/* Sidebar desktop */}
+      <div style={{width: '256px', background: '#0f172a', color: 'white', display: 'flex', flexDirection: 'column', flexShrink: 0}} className="hidden md:flex">
+        <div style={{padding: '16px', borderBottom: '1px solid #334155'}}>
+          <div style={{fontWeight: 'bold', fontSize: '18px'}}>BANQUE INSIDE</div>
+          <div style={{fontSize: '12px', color: '#94a3b8'}}>ANALYSE FINANCIERE PERSONNELLE</div>
         </div>
-        <nav className="flex-1 p-2">
+        <nav style={{flex: 1, padding: '8px'}}>
           {navItems.map(item => (
-            <button
-              key={item.label}
-              onClick={() => setActive(item.label)}
-              className={`w-full text-left p-3 rounded-lg mb-1 transition-colors ${active === item.label ? 'bg-blue-600' : 'hover:bg-slate-700'}`}
-            >
-              <div className="flex items-center gap-2 text-sm font-medium">
-                <span>{item.label}</span>
-              </div>
-              {item.sub && <div className="text-xs text-slate-400 mt-0.5">{item.sub}</div>}
+            <button key={item.label} onClick={() => setActive(item.label)} style={{width: '100%', textAlign: 'left', padding: '12px', borderRadius: '8px', marginBottom: '4px', background: active === item.label ? '#2563eb' : 'transparent', border: 'none', color: 'white', cursor: 'pointer'}}>
+              <div style={{fontSize: '14px', fontWeight: '500'}}>{item.label}</div>
+              {item.sub && <div style={{fontSize: '12px', color: '#94a3b8', marginTop: '2px'}}>{item.sub}</div>}
             </button>
           ))}
         </nav>
-        <div className="p-3 m-3 bg-slate-800 rounded-lg text-xs text-slate-300">
-          <div className="font-medium text-yellow-400 mb-1">Conseil du jour</div>
-          Augmentez votre taux epargne mensuel pour renforcer votre profil financier.
+        <div style={{padding: '12px', margin: '12px', background: '#1e293b', borderRadius: '8px', fontSize: '12px', color: '#cbd5e1'}}>
+          <div style={{fontWeight: '500', color: '#facc15', marginBottom: '4px'}}>Conseil du jour</div>
+          Augmentez votre taux epargne mensuel.
         </div>
       </div>
-      <div className="flex-1 overflow-auto">
-        <div className="bg-slate-900 text-white px-6 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-8">
-            <div className="text-sm">
-              <div className="text-xs text-slate-400">Profil</div>
-              <div className="font-medium">Dupont Julien</div>
-            </div>
-            <div className="text-sm">
-              <div className="text-xs text-slate-400">Derniere mise a jour</div>
-              <div className="font-medium">12/05/2025</div>
+
+      {/* Menu mobile */}
+      {menuOpen && (
+        <div style={{position: 'fixed', inset: 0, background: '#0f172a', zIndex: 50, color: 'white', display: 'flex', flexDirection: 'column'}}>
+          <div style={{padding: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #334155'}}>
+            <div style={{fontWeight: 'bold', fontSize: '18px'}}>BANQUE INSIDE</div>
+            <button onClick={() => setMenuOpen(false)} style={{background: 'none', border: 'none', color: 'white', fontSize: '24px', cursor: 'pointer'}}>X</button>
+          </div>
+          <nav style={{flex: 1, padding: '8px'}}>
+            {navItems.map(item => (
+              <button key={item.label} onClick={() => { setActive(item.label); setMenuOpen(false) }} style={{width: '100%', textAlign: 'left', padding: '16px', borderRadius: '8px', marginBottom: '4px', background: active === item.label ? '#2563eb' : 'transparent', border: 'none', color: 'white', cursor: 'pointer', fontSize: '16px'}}>
+                {item.label}
+              </button>
+            ))}
+          </nav>
+        </div>
+      )}
+
+      <div style={{flex: 1, overflow: 'auto'}}>
+        {/* Header */}
+        <div style={{background: '#0f172a', color: 'white', padding: '12px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between'}}>
+          <div style={{display: 'flex', alignItems: 'center', gap: '16px'}}>
+            <button onClick={() => setMenuOpen(true)} style={{background: 'none', border: 'none', color: 'white', fontSize: '24px', cursor: 'pointer', display: 'block'}} className="md:hidden">☰</button>
+            <div style={{fontSize: '14px'}}>
+              <div style={{fontSize: '12px', color: '#94a3b8'}}>Profil</div>
+              <div style={{fontWeight: '500'}}>Dupont Julien</div>
             </div>
           </div>
-          <div className="text-xs text-slate-400 text-right">
-            MODELE INSPIRE DES ANALYSES BANCAIRES SIMPLIFIEES
+          <div style={{fontSize: '12px', color: '#94a3b8', textAlign: 'right'}}>
+            BANQUE INSIDE
           </div>
         </div>
         {renderPage()}
