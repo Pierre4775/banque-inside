@@ -38,7 +38,7 @@ const navItems = [
 function DashboardPage() {
   return (
     <div className="p-6 space-y-6">
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
         <div className="bg-white rounded-xl p-4 shadow-sm">
           <div className="text-xs font-semibold text-gray-500 uppercase mb-3">Score financier global</div>
           <div className="flex flex-col items-center">
@@ -89,7 +89,7 @@ function DashboardPage() {
           <div className="mt-3 p-2 bg-gray-50 rounded-lg text-xs text-gray-500 text-center">Objectif : 15 a 20%</div>
         </div>
       </div>
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <div className="bg-white rounded-xl p-4 shadow-sm">
           <div className="text-xs font-semibold text-gray-500 uppercase mb-3">Depenses mensuelles</div>
           <div className="flex items-center gap-4">
@@ -139,7 +139,7 @@ function DashboardPage() {
           </ResponsiveContainer>
         </div>
       </div>
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <div className="bg-white rounded-xl p-4 shadow-sm">
           <div className="text-xs font-semibold text-gray-500 uppercase mb-3">Alertes</div>
           <div className="grid grid-cols-2 gap-3">
@@ -158,7 +158,7 @@ function DashboardPage() {
         </div>
         <div className="bg-white rounded-xl p-4 shadow-sm">
           <div className="text-xs font-semibold text-gray-500 uppercase mb-3">Capacite emprunt</div>
-          <div className="grid grid-cols-2 gap-4 mt-4">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-4">
             <div className="text-center">
               <div className="text-xs text-gray-500 mb-1">Montant empruntable</div>
               <div className="text-3xl font-bold">182 000 EUR</div>
