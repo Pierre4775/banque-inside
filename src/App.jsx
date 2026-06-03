@@ -192,7 +192,7 @@ export default function App() {
 
   return (
     <div className="flex h-screen bg-gray-100 font-sans">
-      <div className="w-64 bg-slate-900 text-white flex flex-col">
+      <div className="hidden md:flex md:w-64 bg-slate-900 text-white flex-col>
         <div className="p-4 border-b border-slate-700">
           <div className="font-bold text-lg">BANQUE INSIDE</div>
           <div className="text-xs text-slate-400">ANALYSE FINANCIERE PERSONNELLE</div>
