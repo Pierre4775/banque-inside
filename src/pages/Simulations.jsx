@@ -36,11 +36,14 @@ const sectionTitle = {
   textTransform: 'uppercase', letterSpacing: '0.06em'
 }
 
-function SliderRow({ label, value, min, max, step, onChange, format }) {
+function SliderRow({ label, value, min, max, step, onChange, format, sublabel }) {
   return (
     <div style={{ marginBottom: '18px' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-        <span style={{ fontSize: '13px', color: COLORS.gray600, fontWeight: '500' }}>{label}</span>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+        <div>
+          <span style={{ fontSize: '13px', color: COLORS.gray600, fontWeight: '500' }}>{label}</span>
+          {sublabel && <div style={{ fontSize: '11px', color: COLORS.gray400, marginTop: '1px' }}>{sublabel}</div>}
+        </div>
         <span style={{
           fontSize: '13px', fontWeight: '700', color: COLORS.navy,
           background: COLORS.bluePale, padding: '3px 10px', borderRadius: '6px'
@@ -51,7 +54,7 @@ function SliderRow({ label, value, min, max, step, onChange, format }) {
       <input
         type="range" min={min} max={max} step={step || 1} value={value}
         onChange={e => onChange(Number(e.target.value))}
-        style={{ width: '100%', accentColor: COLORS.blue, height: '4px' }}
+        style={{ width: '100%', accentColor: COLORS.blue, height: '4px', marginTop: '6px' }}
       />
       <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: COLORS.gray400, marginTop: '4px' }}>
         <span>{format ? format(min) : min}</span>
@@ -84,8 +87,10 @@ export default function Simulations() {
   const [dureeLong, setDureeLong] = useState(20)
   const [montantCredit, setMontantCredit] = useState(200000)
   const [tauxCredit, setTauxCredit] = useState(3.5)
+  const [tauxAssurance, setTauxAssurance] = useState(0.36)
   const [dureeCredit, setDureeCredit] = useState(20)
   const [apport, setApport] = useState(20000)
+  const [fraisNotaire, setFraisNotaire] = useState(8)
 
   const calculerEpargne = (mensuel, taux, ans) => {
     const r = taux / 100 / 12
@@ -110,12 +115,27 @@ export default function Simulations() {
     }
   }).map(d => ({ ...d, total: d.court + d.moyen + d.long }))
 
+  // Calculs crédit
+  const montantFraisNotaire = Math.round(montantCredit * fraisNotaire / 100)
   const montantEmprunte = montantCredit - apport
+  const coutTotal_achat = montantCredit + montantFraisNotaire
+
+  // Mensualité crédit (hors assurance)
   const r = tauxCredit / 100 / 12
   const n = dureeCredit * 12
-  const mensualiteCredit = r > 0 ? Math.round(montantEmprunte * r / (1 - Math.pow(1 + r, -n))) : Math.round(montantEmprunte / n)
+  const mensualiteHorsAssurance = r > 0 ? Math.round(montantEmprunte * r / (1 - Math.pow(1 + r, -n))) : Math.round(montantEmprunte / n)
+
+  // Mensualité assurance
+  const mensualiteAssurance = Math.round(montantEmprunte * tauxAssurance / 100 / 12)
+
+  // Mensualité totale
+  const mensualiteCredit = mensualiteHorsAssurance + mensualiteAssurance
+
+  // Coûts
+  const coutInterets = (mensualiteHorsAssurance * n) - montantEmprunte
+  const coutAssurance = mensualiteAssurance * n
   const coutTotal = mensualiteCredit * n
-  const coutInterets = coutTotal - montantEmprunte
+  const coutOperation = montantFraisNotaire + coutInterets + coutAssurance
 
   const dataCredit = Array.from({ length: dureeCredit }, (_, i) => {
     const an = i + 1
@@ -131,13 +151,11 @@ export default function Simulations() {
   return (
     <div style={{ padding: '28px', maxWidth: '800px', margin: '0 auto', fontFamily: "'Inter', -apple-system, sans-serif" }}>
 
-      {/* HEADER */}
       <div style={{ marginBottom: '24px' }}>
         <h1 style={{ fontSize: '22px', fontWeight: '700', color: COLORS.navy, margin: '0 0 6px' }}>Simulations et projections</h1>
         <p style={{ fontSize: '13px', color: COLORS.gray400, margin: 0 }}>Projetez l'évolution de votre épargne et simulez vos crédits</p>
       </div>
 
-      {/* TOGGLE FAMILLE */}
       <div style={{ display: 'flex', gap: '8px', marginBottom: '24px', background: COLORS.white, padding: '4px', borderRadius: '12px', boxShadow: '0 1px 4px rgba(15,39,68,0.08)' }}>
         {[
           { key: 'epargne', label: '💰 Épargne', desc: 'Projections court, moyen et long terme' },
@@ -148,19 +166,16 @@ export default function Simulations() {
             background: familleActive === f.key ? COLORS.navy : 'transparent',
             color: familleActive === f.key ? 'white' : COLORS.gray600,
             fontWeight: familleActive === f.key ? '700' : '400',
-            cursor: 'pointer', fontSize: '14px', transition: 'all 0.25s ease',
-            textAlign: 'left',
+            cursor: 'pointer', fontSize: '14px', transition: 'all 0.25s ease', textAlign: 'left',
           }}>
             <div>{f.label}</div>
-            <div style={{ fontSize: '11px', color: familleActive === f.key ? COLORS.gray400 : COLORS.gray400, marginTop: '2px' }}>{f.desc}</div>
+            <div style={{ fontSize: '11px', color: COLORS.gray400, marginTop: '2px' }}>{f.desc}</div>
           </button>
         ))}
       </div>
 
-      {/* FAMILLE EPARGNE */}
       {familleActive === 'epargne' && (
         <>
-          {/* EPARGNE TOTALE */}
           <div style={{ background: COLORS.navy, borderRadius: '16px', padding: '20px', marginBottom: '20px' }}>
             <div style={{ fontSize: '13px', fontWeight: '700', color: COLORS.gray400, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '16px' }}>
               📊 Épargne totale projetée
@@ -196,7 +211,6 @@ export default function Simulations() {
             </ResponsiveContainer>
           </div>
 
-          {/* COURT TERME */}
           <div style={{ ...cardStyle, borderTop: `3px solid ${COLORS.cyan}` }}>
             <div style={sectionTitle}>📅 Épargne court terme</div>
             <SliderRow label="Épargne mensuelle" value={epargneCourt} min={50} max={2000} step={50} onChange={setEpargneCourt} format={v => `${v} EUR`} />
@@ -211,7 +225,6 @@ export default function Simulations() {
             </div>
           </div>
 
-          {/* MOYEN TERME */}
           <div style={{ ...cardStyle, borderTop: `3px solid ${COLORS.purple}` }}>
             <div style={sectionTitle}>📆 Épargne moyen terme</div>
             <SliderRow label="Épargne mensuelle" value={epargneMoyen} min={50} max={2000} step={50} onChange={setEpargneMoyen} format={v => `${v} EUR`} />
@@ -226,7 +239,6 @@ export default function Simulations() {
             </div>
           </div>
 
-          {/* LONG TERME */}
           <div style={{ ...cardStyle, borderTop: `3px solid ${COLORS.amber}` }}>
             <div style={sectionTitle}>📈 Épargne long terme</div>
             <SliderRow label="Épargne mensuelle" value={epargneLong} min={50} max={2000} step={50} onChange={setEpargneLong} format={v => `${v} EUR`} />
@@ -243,22 +255,59 @@ export default function Simulations() {
         </>
       )}
 
-      {/* FAMILLE CREDIT */}
       {familleActive === 'credit' && (
         <>
           <div style={cardStyle}>
             <div style={sectionTitle}>🏦 Paramètres du crédit</div>
             <SliderRow label="Prix du bien" value={montantCredit} min={50000} max={1000000} step={5000} onChange={setMontantCredit} format={v => `${v.toLocaleString()} EUR`} />
+            <SliderRow
+              label="Frais de notaire"
+              sublabel={`Soit ${montantFraisNotaire.toLocaleString()} EUR`}
+              value={fraisNotaire} min={2} max={12} step={0.5}
+              onChange={setFraisNotaire}
+              format={v => `${v}%`}
+            />
             <SliderRow label="Apport personnel" value={apport} min={0} max={Math.round(montantCredit * 0.5)} step={1000} onChange={setApport} format={v => `${v.toLocaleString()} EUR`} />
             <SliderRow label="Taux d'intérêt" value={tauxCredit} min={0.5} max={8} step={0.1} onChange={setTauxCredit} format={v => `${v}%`} />
+            <SliderRow
+              label="Taux assurance emprunteur"
+              sublabel={`Soit ${mensualiteAssurance.toLocaleString()} EUR/mois`}
+              value={tauxAssurance} min={0.1} max={1.5} step={0.01}
+              onChange={setTauxAssurance}
+              format={v => `${v.toFixed(2)}%`}
+            />
             <SliderRow label="Durée du crédit" value={dureeCredit} min={5} max={30} onChange={setDureeCredit} format={v => `${v} ans`} />
+          </div>
+
+          {/* RESUME OPERATION */}
+          <div style={{ background: COLORS.navy, borderRadius: '16px', padding: '20px', marginBottom: '16px' }}>
+            <div style={{ fontSize: '13px', fontWeight: '700', color: COLORS.gray400, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '16px' }}>
+              🏠 Résumé de l'opération
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px', marginBottom: '12px' }}>
+              <div style={{ background: COLORS.navyLight, borderRadius: '10px', padding: '12px', textAlign: 'center' }}>
+                <div style={{ fontSize: '11px', color: COLORS.gray400, marginBottom: '4px', fontWeight: '600' }}>PRIX DU BIEN</div>
+                <div style={{ fontSize: '16px', fontWeight: '800', color: 'white' }}>{montantCredit.toLocaleString()}</div>
+                <div style={{ fontSize: '11px', color: COLORS.gray400 }}>EUR</div>
+              </div>
+              <div style={{ background: COLORS.navyLight, borderRadius: '10px', padding: '12px', textAlign: 'center' }}>
+                <div style={{ fontSize: '11px', color: COLORS.gray400, marginBottom: '4px', fontWeight: '600' }}>FRAIS NOTAIRE</div>
+                <div style={{ fontSize: '16px', fontWeight: '800', color: '#fbbf24' }}>{montantFraisNotaire.toLocaleString()}</div>
+                <div style={{ fontSize: '11px', color: COLORS.gray400 }}>EUR ({fraisNotaire}%)</div>
+              </div>
+              <div style={{ background: COLORS.navyLight, borderRadius: '10px', padding: '12px', textAlign: 'center' }}>
+                <div style={{ fontSize: '11px', color: COLORS.gray400, marginBottom: '4px', fontWeight: '600' }}>COÛT TOTAL OPÉRATION</div>
+                <div style={{ fontSize: '16px', fontWeight: '800', color: COLORS.red }}>{coutOperation.toLocaleString()}</div>
+                <div style={{ fontSize: '11px', color: COLORS.gray400 }}>EUR</div>
+              </div>
+            </div>
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px', marginBottom: '16px' }}>
             <ResultCard label="MONTANT EMPRUNTÉ" value={`${montantEmprunte.toLocaleString()} EUR`} color={COLORS.blue} />
-            <ResultCard label="MENSUALITÉ" value={`${mensualiteCredit.toLocaleString()} EUR`} sublabel="par mois" color={COLORS.green} />
+            <ResultCard label="MENSUALITÉ TOTALE" value={`${mensualiteCredit.toLocaleString()} EUR`} sublabel={`dont ${mensualiteHorsAssurance.toLocaleString()} crédit + ${mensualiteAssurance.toLocaleString()} assurance`} color={COLORS.green} />
             <ResultCard label="COÛT TOTAL INTÉRÊTS" value={`${coutInterets.toLocaleString()} EUR`} color={COLORS.red} />
-            <ResultCard label="COÛT TOTAL CRÉDIT" value={`${coutTotal.toLocaleString()} EUR`} color={COLORS.amber} />
+            <ResultCard label="COÛT TOTAL ASSURANCE" value={`${coutAssurance.toLocaleString()} EUR`} sublabel={`sur ${dureeCredit} ans`} color={COLORS.purple} />
           </div>
 
           <div style={cardStyle}>

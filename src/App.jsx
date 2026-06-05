@@ -49,7 +49,11 @@ const COLORS = {
   redLight: '#fee2e2',
   amber: '#d97706',
   amberLight: '#fef3c7',
+  purple: '#7c3aed',
+  purpleLight: '#f5f3ff',
 }
+
+const TAUX_MARCHE = { 10: 3.20, 15: 3.40, 20: 3.55, 25: 3.75 }
 
 const navItems = [
   { label: 'Dashboard', icon: '⊞' },
@@ -65,9 +69,7 @@ const navItems = [
 function StatCard({ title, children, accent }) {
   return (
     <div style={{
-      background: COLORS.white,
-      borderRadius: '16px',
-      padding: '20px',
+      background: COLORS.white, borderRadius: '16px', padding: '20px',
       boxShadow: '0 1px 4px rgba(15,39,68,0.08), 0 4px 16px rgba(15,39,68,0.04)',
       borderTop: `3px solid ${accent || COLORS.blue}`,
     }}>
@@ -77,7 +79,7 @@ function StatCard({ title, children, accent }) {
   )
 }
 
-function DashboardPage({ profil, vueMode, setVueMode }) {
+function DashboardPage({ profil, vueMode, setVueMode, dureeEmprunt, setDureeEmprunt }) {
   if (!profil) return (
     <div style={{ padding: '48px', textAlign: 'center', color: COLORS.gray400 }}>
       <div style={{ fontSize: '32px', marginBottom: '12px' }}>⟳</div>
@@ -89,21 +91,42 @@ function DashboardPage({ profil, vueMode, setVueMode }) {
   const revenus1 = Math.round((profil.salaire || 0) + (profil.revenus_fonciers || 0) + (profil.autres_revenus || 0))
   const revenus2 = Math.round((profil.salaire2 || 0) + (profil.revenus_fonciers2 || 0) + (profil.autres_revenus2 || 0))
   const totalRevenus = vueMode === 'foyer' ? revenus1 + revenus2 : revenus1
-  const depenses1 = Math.round((profil.logement || 0) + (profil.alimentation || 0) + (profil.transports || 0) + (profil.loisirs || 0) + (profil.sante || 0) + (profil.autres_depenses || 0))
-  const depenses2 = Math.round((profil.logement2 || 0) + (profil.alimentation2 || 0) + (profil.transports2 || 0) + (profil.loisirs2 || 0) + (profil.sante2 || 0) + (profil.autres_depenses2 || 0))
+
+  const depenses1 = Math.round((profil.logement || 0) + (profil.alimentation || 0) + (profil.transports || 0) + (profil.loisirs || 0) + (profil.sante || 0) + (profil.autres_depenses || 0) + (profil.impots || 0))
+  const depenses2 = Math.round((profil.logement2 || 0) + (profil.alimentation2 || 0) + (profil.transports2 || 0) + (profil.loisirs2 || 0) + (profil.sante2 || 0) + (profil.autres_depenses2 || 0) + (profil.impots2 || 0))
   const totalDepenses = vueMode === 'foyer' ? depenses1 + depenses2 : depenses1
+
+  const impots1 = profil.impots || 0
+  const impots2 = profil.impots2 || 0
+  const totalImpots = vueMode === 'foyer' ? impots1 + impots2 : impots1
+
+  const depensesHorsImpots1 = depenses1 - impots1
+  const depensesHorsImpots2 = depenses2 - impots2
+  const totalDepensesHorsImpots = vueMode === 'foyer' ? depensesHorsImpots1 + depensesHorsImpots2 : depensesHorsImpots1
+
   const creditsImmo = profil.credits_immo || []
   const creditsAutre = profil.credits_autre || []
   const totalMensualites = Math.round([...creditsImmo, ...creditsAutre].reduce((a, c) => a + (parseFloat(c.mensualite) || 0), 0))
+
   const loyer = vueMode === 'foyer' ? Math.round((profil.logement || 0) + (profil.logement2 || 0)) : Math.round(profil.logement || 0)
   const chargesEndettement = totalMensualites + loyer
+
   const tauxEndettement = totalRevenus > 0 ? Math.round((chargesEndettement / totalRevenus) * 100) : 0
+  const revenusApresImpots = totalRevenus - totalImpots
+  const tauxEndettementApresImpots = revenusApresImpots > 0 ? Math.round((chargesEndettement / revenusApresImpots) * 100) : 0
+
   const resteAVivre = totalRevenus - chargesEndettement
+  const resteAVivreApresImpots = revenusApresImpots - chargesEndettement
+
   const epargne = totalRevenus - totalDepenses - totalMensualites
   const tauxEpargne = totalRevenus > 0 ? Math.round((epargne / totalRevenus) * 100) : 0
   const score = Math.min(100, Math.max(0, Math.round(50 + tauxEpargne - tauxEndettement)))
-  const capaciteEmprunt = Math.round(totalRevenus * 0.33 * 12 * 20)
-  const mensualiteMax = Math.round(totalRevenus * 0.33)
+
+  // Capacité emprunt avec taux marché
+  const mensualiteMax = Math.round(Math.max(0, totalRevenus * 0.33 - totalMensualites))
+  const r = TAUX_MARCHE[dureeEmprunt] / 100 / 12
+  const n = dureeEmprunt * 12
+  const capaciteEmprunt = mensualiteMax > 0 ? Math.round(mensualiteMax * (1 - Math.pow(1 + r, -n)) / r) : 0
 
   const depensesBase = vueMode === 'foyer' ? {
     logement: (profil.logement || 0) + (profil.logement2 || 0),
@@ -111,6 +134,7 @@ function DashboardPage({ profil, vueMode, setVueMode }) {
     transports: (profil.transports || 0) + (profil.transports2 || 0),
     loisirs: (profil.loisirs || 0) + (profil.loisirs2 || 0),
     sante: (profil.sante || 0) + (profil.sante2 || 0),
+    impots: (profil.impots || 0) + (profil.impots2 || 0),
     autres: (profil.autres_depenses || 0) + (profil.autres_depenses2 || 0),
   } : {
     logement: profil.logement || 0,
@@ -118,6 +142,7 @@ function DashboardPage({ profil, vueMode, setVueMode }) {
     transports: profil.transports || 0,
     loisirs: profil.loisirs || 0,
     sante: profil.sante || 0,
+    impots: profil.impots || 0,
     autres: profil.autres_depenses || 0,
   }
 
@@ -126,7 +151,8 @@ function DashboardPage({ profil, vueMode, setVueMode }) {
     { name: 'Alimentation', value: depensesBase.alimentation, color: COLORS.blue },
     { name: 'Transports', value: depensesBase.transports, color: COLORS.green },
     { name: 'Loisirs', value: depensesBase.loisirs, color: COLORS.amber },
-    { name: 'Sante', value: depensesBase.sante, color: COLORS.red },
+    { name: 'Impôts', value: depensesBase.impots, color: COLORS.purple },
+    { name: 'Santé', value: depensesBase.sante, color: COLORS.red },
     { name: 'Autres', value: depensesBase.autres, color: COLORS.gray400 },
   ].filter(d => d.value > 0)
 
@@ -141,7 +167,7 @@ function DashboardPage({ profil, vueMode, setVueMode }) {
   ]
 
   const scoreColor = score >= 70 ? COLORS.green : score >= 50 ? COLORS.amber : COLORS.red
-  const scoreLabel = score >= 70 ? 'Profil solide' : score >= 50 ? 'Profil correct' : 'A ameliorer'
+  const scoreLabel = score >= 70 ? 'Profil solide' : score >= 50 ? 'Profil correct' : 'A améliorer'
 
   return (
     <div style={{ padding: '28px', display: 'flex', flexDirection: 'column', gap: '24px', background: COLORS.gray50, minHeight: '100%' }}>
@@ -169,6 +195,7 @@ function DashboardPage({ profil, vueMode, setVueMode }) {
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px' }}>
+
         <StatCard title="Score financier" accent={scoreColor}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
             <div style={{ position: 'relative', width: '80px', height: '80px', flexShrink: 0 }}>
@@ -190,17 +217,14 @@ function DashboardPage({ profil, vueMode, setVueMode }) {
           </div>
         </StatCard>
 
-        <StatCard title={`Epargne mensuelle ${vueMode === 'foyer' ? '· Foyer' : ''}`} accent={COLORS.blue}>
+        <StatCard title={`Épargne mensuelle ${vueMode === 'foyer' ? '· Foyer' : ''}`} accent={COLORS.blue}>
           <div style={{ fontSize: '28px', fontWeight: '800', color: COLORS.navy }}>
             <AnimatedNumber value={epargne} /> <span style={{ fontSize: '14px', fontWeight: '400', color: COLORS.gray400 }}>EUR</span>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '8px' }}>
-            <div style={{
-              display: 'inline-block', padding: '3px 8px', borderRadius: '6px',
-              background: tauxEpargne >= 15 ? COLORS.greenLight : COLORS.amberLight,
-              color: tauxEpargne >= 15 ? COLORS.green : COLORS.amber,
-              fontSize: '12px', fontWeight: '600'
-            }}>{tauxEpargne}% d'épargne</div>
+          <div style={{ marginTop: '8px', display: 'flex', gap: '6px' }}>
+            <div style={{ padding: '3px 8px', borderRadius: '6px', background: tauxEpargne >= 15 ? COLORS.greenLight : COLORS.amberLight, color: tauxEpargne >= 15 ? COLORS.green : COLORS.amber, fontSize: '12px', fontWeight: '600' }}>
+              {tauxEpargne}% épargne
+            </div>
           </div>
           <div style={{ marginTop: '10px', padding: '8px 10px', background: COLORS.gray100, borderRadius: '8px', fontSize: '12px', color: COLORS.gray600 }}>
             Objectif : 15 à 20%
@@ -208,27 +232,43 @@ function DashboardPage({ profil, vueMode, setVueMode }) {
         </StatCard>
 
         <StatCard title="Taux d'endettement" accent={tauxEndettement <= 33 ? COLORS.green : COLORS.red}>
-          <div style={{ fontSize: '28px', fontWeight: '800', color: COLORS.navy }}>
-            <AnimatedNumber value={tauxEndettement} suffix="%" />
+          <div style={{ display: 'flex', gap: '8px', marginBottom: '12px' }}>
+            <div style={{ flex: 1, background: COLORS.gray50, borderRadius: '10px', padding: '10px', textAlign: 'center' }}>
+              <div style={{ fontSize: '10px', color: COLORS.gray400, fontWeight: '700', letterSpacing: '0.04em', marginBottom: '4px' }}>AVANT IMPÔTS</div>
+              <div style={{ fontSize: '20px', fontWeight: '800', color: tauxEndettement <= 33 ? COLORS.green : COLORS.red }}>
+                <AnimatedNumber value={tauxEndettement} suffix="%" />
+              </div>
+            </div>
+            <div style={{ flex: 1, background: COLORS.purpleLight, borderRadius: '10px', padding: '10px', textAlign: 'center' }}>
+              <div style={{ fontSize: '10px', color: COLORS.purple, fontWeight: '700', letterSpacing: '0.04em', marginBottom: '4px' }}>APRÈS IMPÔTS</div>
+              <div style={{ fontSize: '20px', fontWeight: '800', color: tauxEndettementApresImpots <= 33 ? COLORS.green : COLORS.red }}>
+                <AnimatedNumber value={tauxEndettementApresImpots} suffix="%" />
+              </div>
+            </div>
           </div>
-          <div style={{ fontSize: '12px', color: COLORS.gray400, margin: '4px 0 10px' }}>
-            Crédits {totalMensualites.toLocaleString()} + Loyer {loyer.toLocaleString()} EUR
-          </div>
-          <div style={{ height: '6px', borderRadius: '3px', background: COLORS.gray200, overflow: 'hidden', marginBottom: '8px' }}>
+          <div style={{ height: '6px', borderRadius: '3px', background: COLORS.gray200, overflow: 'hidden', marginBottom: '4px' }}>
             <div style={{
               height: '100%', borderRadius: '3px',
-              width: `${Math.min(tauxEndettement, 100)}%`,
-              background: tauxEndettement <= 33 ? COLORS.green : tauxEndettement <= 50 ? COLORS.amber : COLORS.red,
+              width: `${Math.min(tauxEndettementApresImpots, 100)}%`,
+              background: tauxEndettementApresImpots <= 33 ? COLORS.green : tauxEndettementApresImpots <= 50 ? COLORS.amber : COLORS.red,
               transition: 'width 0.6s ease'
             }} />
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', color: COLORS.gray400, marginBottom: '10px' }}>
             <span>0%</span><span>33%</span><span>50%</span><span>100%</span>
           </div>
-          <div style={{ padding: '8px 10px', borderRadius: '8px', background: resteAVivre >= 0 ? COLORS.greenLight : COLORS.redLight }}>
-            <div style={{ fontSize: '11px', color: COLORS.gray600 }}>Reste à vivre</div>
-            <div style={{ fontSize: '16px', fontWeight: '700', color: resteAVivre >= 0 ? COLORS.green : COLORS.red }}>
-              <AnimatedNumber value={resteAVivre} /> EUR
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <div style={{ flex: 1, padding: '8px', borderRadius: '8px', background: resteAVivre >= 0 ? COLORS.greenLight : COLORS.redLight }}>
+              <div style={{ fontSize: '10px', color: COLORS.gray600, fontWeight: '600' }}>AVANT IMPÔTS</div>
+              <div style={{ fontSize: '14px', fontWeight: '700', color: resteAVivre >= 0 ? COLORS.green : COLORS.red }}>
+                <AnimatedNumber value={resteAVivre} /> EUR
+              </div>
+            </div>
+            <div style={{ flex: 1, padding: '8px', borderRadius: '8px', background: resteAVivreApresImpots >= 0 ? COLORS.purpleLight : COLORS.redLight }}>
+              <div style={{ fontSize: '10px', color: COLORS.purple, fontWeight: '600' }}>APRÈS IMPÔTS</div>
+              <div style={{ fontSize: '14px', fontWeight: '700', color: resteAVivreApresImpots >= 0 ? COLORS.purple : COLORS.red }}>
+                <AnimatedNumber value={resteAVivreApresImpots} /> EUR
+              </div>
             </div>
           </div>
         </StatCard>
@@ -237,7 +277,7 @@ function DashboardPage({ profil, vueMode, setVueMode }) {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 12px', background: COLORS.bluePale, borderRadius: '10px' }}>
               <div>
-                <div style={{ fontSize: '11px', color: COLORS.blue, fontWeight: '600' }}>REVENUS</div>
+                <div style={{ fontSize: '11px', color: COLORS.blue, fontWeight: '600' }}>REVENUS BRUTS</div>
                 <div style={{ fontSize: '20px', fontWeight: '800', color: COLORS.navy }}>
                   <AnimatedNumber value={totalRevenus} /> <span style={{ fontSize: '12px', fontWeight: '400' }}>EUR</span>
                 </div>
@@ -246,18 +286,30 @@ function DashboardPage({ profil, vueMode, setVueMode }) {
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 12px', background: COLORS.redLight, borderRadius: '10px' }}>
               <div>
-                <div style={{ fontSize: '11px', color: COLORS.red, fontWeight: '600' }}>DEPENSES</div>
+                <div style={{ fontSize: '11px', color: COLORS.red, fontWeight: '600' }}>DÉPENSES TOTALES</div>
                 <div style={{ fontSize: '20px', fontWeight: '800', color: COLORS.navy }}>
                   <AnimatedNumber value={totalDepenses} /> <span style={{ fontSize: '12px', fontWeight: '400' }}>EUR</span>
                 </div>
               </div>
               <div style={{ fontSize: '24px' }}>↓</div>
             </div>
+            {totalImpots > 0 && (
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 12px', background: COLORS.purpleLight, borderRadius: '10px' }}>
+                <div>
+                  <div style={{ fontSize: '11px', color: COLORS.purple, fontWeight: '600' }}>DONT IMPÔTS</div>
+                  <div style={{ fontSize: '16px', fontWeight: '700', color: COLORS.navy }}>
+                    <AnimatedNumber value={totalImpots} /> <span style={{ fontSize: '12px', fontWeight: '400' }}>EUR</span>
+                  </div>
+                </div>
+                <div style={{ fontSize: '18px' }}>🏛</div>
+              </div>
+            )}
           </div>
         </StatCard>
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '16px' }}>
+
         <div style={{ background: COLORS.white, borderRadius: '16px', padding: '20px', boxShadow: '0 1px 4px rgba(15,39,68,0.08)' }}>
           <div style={{ fontSize: '11px', fontWeight: '700', color: COLORS.gray400, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '16px' }}>Répartition des dépenses</div>
           {depensesData.length > 0 ? (
@@ -295,8 +347,24 @@ function DashboardPage({ profil, vueMode, setVueMode }) {
         </div>
 
         <div style={{ background: COLORS.navy, borderRadius: '16px', padding: '20px', boxShadow: '0 1px 4px rgba(15,39,68,0.08)' }}>
-          <div style={{ fontSize: '11px', fontWeight: '700', color: COLORS.gray400, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '16px' }}>Capacité d'emprunt</div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '16px' }}>
+          <div style={{ fontSize: '11px', fontWeight: '700', color: COLORS.gray400, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '12px' }}>Capacité d'emprunt</div>
+
+          {/* TOGGLE DUREE */}
+          <div style={{ display: 'flex', gap: '4px', marginBottom: '14px', background: COLORS.navyLight, padding: '3px', borderRadius: '8px' }}>
+            {[10, 15, 20, 25].map(d => (
+              <button key={d} onClick={() => setDureeEmprunt(d)} style={{
+                flex: 1, padding: '5px 0', borderRadius: '6px', border: 'none',
+                background: dureeEmprunt === d ? 'white' : 'transparent',
+                color: dureeEmprunt === d ? COLORS.navy : COLORS.gray400,
+                fontWeight: dureeEmprunt === d ? '700' : '400',
+                fontSize: '12px', cursor: 'pointer', transition: 'all 0.2s ease'
+              }}>
+                {d}ans
+              </button>
+            ))}
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '12px' }}>
             <div style={{ textAlign: 'center', background: COLORS.navyLight, borderRadius: '10px', padding: '12px' }}>
               <div style={{ fontSize: '11px', color: COLORS.gray400, marginBottom: '6px' }}>Montant max</div>
               <div style={{ fontSize: '18px', fontWeight: '800', color: 'white' }}>
@@ -312,8 +380,10 @@ function DashboardPage({ profil, vueMode, setVueMode }) {
               <div style={{ fontSize: '11px', color: COLORS.gray400 }}>EUR/mois</div>
             </div>
           </div>
-          <div style={{ padding: '10px 12px', background: COLORS.navyLight, borderRadius: '10px', fontSize: '12px', color: COLORS.gray400, textAlign: 'center' }}>
-            Taux endettement après projet : {Math.min(100, tauxEndettement + 10)}%
+
+          <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 12px', background: COLORS.navyLight, borderRadius: '10px', fontSize: '11px', color: COLORS.gray400 }}>
+            <span>Taux {TAUX_MARCHE[dureeEmprunt]}% · {dureeEmprunt} ans</span>
+            <span>Endettement actuel : {tauxEndettement}%</span>
           </div>
         </div>
       </div>
@@ -327,6 +397,7 @@ export default function App() {
   const [user, setUser] = useState(null)
   const [profil, setProfil] = useState(null)
   const [vueMode, setVueMode] = useState('personnel')
+  const [dureeEmprunt, setDureeEmprunt] = useState(20)
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -369,15 +440,13 @@ export default function App() {
       'Simulations': <Simulations />,
       'Alertes': <Alertes />,
     }
-    return pages[active] || <DashboardPage profil={profil} vueMode={vueMode} setVueMode={setVueMode} />
+    return pages[active] || <DashboardPage profil={profil} vueMode={vueMode} setVueMode={setVueMode} dureeEmprunt={dureeEmprunt} setDureeEmprunt={setDureeEmprunt} />
   }
 
   if (!user) return <Login onLogin={() => supabase.auth.getSession().then(({ data: { session } }) => setUser(session?.user))} />
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh', background: COLORS.gray50, fontFamily: "'Inter', -apple-system, sans-serif" }}>
-
-      {/* SIDEBAR */}
       <div style={{ width: '260px', background: COLORS.navy, color: 'white', display: window.innerWidth < 768 ? 'none' : 'flex', flexDirection: 'column', flexShrink: 0, position: 'sticky', top: 0, height: '100vh' }}>
         <div style={{ padding: '24px 20px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
           <div style={{ fontSize: '16px', fontWeight: '800', letterSpacing: '0.05em', color: 'white' }}>BANQUE INSIDE</div>
@@ -388,8 +457,7 @@ export default function App() {
             const isActive = active === item.label
             return (
               <button key={item.label} onClick={() => setActive(item.label)} style={{
-                width: '100%', textAlign: 'left', padding: '10px 12px',
-                borderRadius: '10px', marginBottom: '2px',
+                width: '100%', textAlign: 'left', padding: '10px 12px', borderRadius: '10px', marginBottom: '2px',
                 background: isActive ? 'rgba(255,255,255,0.1)' : 'transparent',
                 border: isActive ? '1px solid rgba(255,255,255,0.12)' : '1px solid transparent',
                 color: isActive ? 'white' : COLORS.gray400,
@@ -412,7 +480,6 @@ export default function App() {
         </div>
       </div>
 
-      {/* MENU MOBILE */}
       {menuOpen && (
         <div style={{ position: 'fixed', inset: 0, background: COLORS.navy, zIndex: 50, color: 'white', display: 'flex', flexDirection: 'column' }}>
           <div style={{ padding: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
@@ -438,7 +505,6 @@ export default function App() {
         </div>
       )}
 
-      {/* MAIN */}
       <div style={{ flex: 1, overflow: 'auto', display: 'flex', flexDirection: 'column' }}>
         <div style={{ background: COLORS.white, borderBottom: '1px solid ' + COLORS.gray200, padding: '0 24px', height: '60px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'sticky', top: 0, zIndex: 10 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>

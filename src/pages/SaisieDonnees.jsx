@@ -22,7 +22,7 @@ const COLORS = {
 
 const creditVide = { mensualite: '', duree: '', capital: '', commun: false }
 const revenusVide = { salaire: '', fonciers: '', autres: '' }
-const depensesVide = { logement: '', alimentation: '', transports: '', loisirs: '', sante: '', autres: '' }
+const depensesVide = { logement: '', alimentation: '', transports: '', loisirs: '', sante: '', autres: '', impots: '' }
 
 const inputStyle = {
   width: '100%', border: `1.5px solid ${COLORS.gray200}`, borderRadius: '10px',
@@ -53,7 +53,7 @@ function BlocRevenus({ revenus, setRevenus, label, couleur, estConjoint2, onDivi
       <div style={{ ...titleStyle, color: couleur }}>{label}</div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
         <div>
-          <label style={labelStyle}>Salaire net</label>
+          <label style={labelStyle}>Salaire net imposable</label>
           <input type="text" inputMode="numeric" style={inputStyle} placeholder="ex: 3 000" value={revenus.salaire} onChange={e => setRevenus(prev => ({ ...prev, salaire: e.target.value }))} />
         </div>
         <div>
@@ -94,6 +94,7 @@ function BlocDepenses({ depenses, setDepenses, label, couleur }) {
     { key: 'loisirs', label: 'Loisirs', placeholder: '300' },
     { key: 'sante', label: 'Santé', placeholder: '300' },
     { key: 'autres', label: 'Autres', placeholder: '300' },
+    { key: 'impots', label: 'Impôts (mensuel)', placeholder: '200', highlight: true },
   ]
   return (
     <div style={{ ...cardStyle, borderTop: `3px solid ${couleur}` }}>
@@ -101,8 +102,14 @@ function BlocDepenses({ depenses, setDepenses, label, couleur }) {
       <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
         {items.map(item => (
           <div key={item.key}>
-            <label style={labelStyle}>{item.label}</label>
-            <input type="text" inputMode="numeric" style={inputStyle} placeholder={item.placeholder} value={depenses[item.key]} onChange={e => setDepenses(prev => ({ ...prev, [item.key]: e.target.value }))} />
+            <label style={{ ...labelStyle, color: item.highlight ? COLORS.purple : COLORS.gray600 }}>{item.label}</label>
+            <input
+              type="text" inputMode="numeric"
+              style={{ ...inputStyle, borderColor: item.highlight ? COLORS.purple : COLORS.gray200 }}
+              placeholder={item.placeholder}
+              value={depenses[item.key] || ''}
+              onChange={e => setDepenses(prev => ({ ...prev, [item.key]: e.target.value }))}
+            />
           </div>
         ))}
         <div style={{ background: COLORS.redLight, borderRadius: '10px', padding: '14px', borderLeft: `3px solid ${COLORS.red}` }}>
@@ -178,7 +185,6 @@ function BlocCredits({ liste, setListe, couleur, emoji, label, situation }) {
         width: '100%', background: COLORS.white, color: couleur,
         border: `1.5px dashed ${couleur}`, borderRadius: '10px',
         padding: '10px', fontSize: '13px', cursor: 'pointer', fontWeight: '600',
-        transition: 'all 0.2s ease',
       }}>
         + Ajouter un {label.toLowerCase()}
       </button>
@@ -205,6 +211,9 @@ export default function SaisieDonnees() {
   const totalMensualites = Math.round([...creditsImmo, ...creditsAutre].reduce((a, c) => a + (parseFloat(c.mensualite) || 0), 0))
   const totalRevenus = situation === 'foyer' ? totalRevenus1 + totalRevenus2 : totalRevenus1
   const totalDepenses = situation === 'foyer' ? totalDepenses1 + totalDepenses2 : totalDepenses1
+  const totalImpots = situation === 'foyer'
+    ? (parseFloat(depenses1.impots) || 0) + (parseFloat(depenses2.impots) || 0)
+    : (parseFloat(depenses1.impots) || 0)
   const epargne = totalRevenus - totalDepenses - totalMensualites
 
   useEffect(() => {
@@ -223,8 +232,8 @@ export default function SaisieDonnees() {
         if (d.personnes_charge) setPersonnesCharge(d.personnes_charge)
         setRevenus1({ salaire: String(d.salaire || ''), fonciers: String(d.revenus_fonciers || ''), autres: String(d.autres_revenus || '') })
         setRevenus2({ salaire: String(d.salaire2 || ''), fonciers: String(d.revenus_fonciers2 || ''), autres: String(d.autres_revenus2 || '') })
-        setDepenses1({ logement: String(d.logement || ''), alimentation: String(d.alimentation || ''), transports: String(d.transports || ''), loisirs: String(d.loisirs || ''), sante: String(d.sante || ''), autres: String(d.autres_depenses || '') })
-        setDepenses2({ logement: String(d.logement2 || ''), alimentation: String(d.alimentation2 || ''), transports: String(d.transports2 || ''), loisirs: String(d.loisirs2 || ''), sante: String(d.sante2 || ''), autres: String(d.autres_depenses2 || '') })
+        setDepenses1({ logement: String(d.logement || ''), alimentation: String(d.alimentation || ''), transports: String(d.transports || ''), loisirs: String(d.loisirs || ''), sante: String(d.sante || ''), autres: String(d.autres_depenses || ''), impots: String(d.impots || '') })
+        setDepenses2({ logement: String(d.logement2 || ''), alimentation: String(d.alimentation2 || ''), transports: String(d.transports2 || ''), loisirs: String(d.loisirs2 || ''), sante: String(d.sante2 || ''), autres: String(d.autres_depenses2 || ''), impots: String(d.impots2 || '') })
         if (d.credits_immo && d.credits_immo.length > 0) setCreditsImmo(d.credits_immo)
         if (d.credits_autre && d.credits_autre.length > 0) setCreditsAutre(d.credits_autre)
       }
@@ -258,12 +267,14 @@ export default function SaisieDonnees() {
       loisirs: parseFloat(depenses1.loisirs) || 0,
       sante: parseFloat(depenses1.sante) || 0,
       autres_depenses: parseFloat(depenses1.autres) || 0,
+      impots: parseFloat(depenses1.impots) || 0,
       logement2: parseFloat(depenses2.logement) || 0,
       alimentation2: parseFloat(depenses2.alimentation) || 0,
       transports2: parseFloat(depenses2.transports) || 0,
       loisirs2: parseFloat(depenses2.loisirs) || 0,
       sante2: parseFloat(depenses2.sante) || 0,
       autres_depenses2: parseFloat(depenses2.autres) || 0,
+      impots2: parseFloat(depenses2.impots) || 0,
       credits_immo: creditsImmo,
       credits_autre: creditsAutre,
     }], { onConflict: 'user_id' })
@@ -275,13 +286,11 @@ export default function SaisieDonnees() {
   return (
     <div style={{ padding: '28px', maxWidth: '800px', margin: '0 auto', fontFamily: "'Inter', -apple-system, sans-serif" }}>
 
-      {/* HEADER */}
       <div style={{ marginBottom: '28px' }}>
         <h1 style={{ fontSize: '22px', fontWeight: '700', color: COLORS.navy, margin: '0 0 6px' }}>Saisie des données</h1>
         <p style={{ fontSize: '13px', color: COLORS.gray400, margin: 0 }}>Renseignez vos informations financières pour obtenir votre analyse</p>
       </div>
 
-      {/* MESSAGE */}
       {message && (
         <div style={{
           padding: '12px 16px', borderRadius: '10px', marginBottom: '20px',
@@ -294,7 +303,6 @@ export default function SaisieDonnees() {
         </div>
       )}
 
-      {/* SITUATION */}
       <div style={cardStyle}>
         <div style={titleStyle}>Votre situation</div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
@@ -328,7 +336,6 @@ export default function SaisieDonnees() {
         </div>
       </div>
 
-      {/* REVENUS */}
       {situation === 'foyer' ? (
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
           <BlocRevenus revenus={revenus1} setRevenus={setRevenus1} label="💼 Conjoint 1" couleur={COLORS.blue} estConjoint2={false} onDiviser={diviserFonciers} />
@@ -338,7 +345,6 @@ export default function SaisieDonnees() {
         <BlocRevenus revenus={revenus1} setRevenus={setRevenus1} label="💼 Revenus mensuels" couleur={COLORS.blue} estConjoint2={false} onDiviser={diviserFonciers} />
       )}
 
-      {/* DEPENSES */}
       {situation === 'foyer' ? (
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
           <BlocDepenses depenses={depenses1} setDepenses={setDepenses1} label="🛒 Dépenses Conjoint 1" couleur={COLORS.blue} />
@@ -348,7 +354,6 @@ export default function SaisieDonnees() {
         <BlocDepenses depenses={depenses1} setDepenses={setDepenses1} label="🛒 Dépenses mensuelles" couleur={COLORS.red} />
       )}
 
-      {/* CREDITS */}
       <div style={cardStyle}>
         <div style={titleStyle}>Crédits en cours</div>
         <BlocCredits liste={creditsImmo} setListe={setCreditsImmo} couleur={COLORS.blue} emoji="🏠" label="Crédit immobilier" situation={situation} />
@@ -363,32 +368,42 @@ export default function SaisieDonnees() {
         </div>
       </div>
 
-      {/* EPARGNE */}
+      {/* RESUME AVANT / APRES IMPOTS */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '16px' }}>
+        <div style={{ background: COLORS.white, borderRadius: '14px', padding: '16px', boxShadow: '0 1px 4px rgba(15,39,68,0.08)', borderTop: `3px solid ${COLORS.blue}` }}>
+          <div style={{ fontSize: '11px', fontWeight: '700', color: COLORS.blue, letterSpacing: '0.06em', marginBottom: '10px' }}>ÉPARGNE AVANT IMPÔTS</div>
+          <div style={{ fontSize: '24px', fontWeight: '800', color: COLORS.navy }}>{epargne.toLocaleString()} <span style={{ fontSize: '13px', color: COLORS.gray400 }}>EUR</span></div>
+          {totalRevenus > 0 && <div style={{ fontSize: '12px', color: COLORS.gray400, marginTop: '4px' }}>Taux : {Math.round((epargne / totalRevenus) * 100)}%</div>}
+        </div>
+        <div style={{ background: COLORS.white, borderRadius: '14px', padding: '16px', boxShadow: '0 1px 4px rgba(15,39,68,0.08)', borderTop: `3px solid ${COLORS.purple}` }}>
+          <div style={{ fontSize: '11px', fontWeight: '700', color: COLORS.purple, letterSpacing: '0.06em', marginBottom: '10px' }}>ÉPARGNE APRÈS IMPÔTS</div>
+          <div style={{ fontSize: '24px', fontWeight: '800', color: COLORS.navy }}>{(epargne - totalImpots).toLocaleString()} <span style={{ fontSize: '13px', color: COLORS.gray400 }}>EUR</span></div>
+          {totalRevenus > 0 && <div style={{ fontSize: '12px', color: COLORS.gray400, marginTop: '4px' }}>Taux : {Math.round(((epargne - totalImpots) / totalRevenus) * 100)}%</div>}
+        </div>
+      </div>
+
       <div style={{
         borderRadius: '16px', padding: '20px', marginBottom: '20px',
         background: epargne >= 0 ? COLORS.navy : COLORS.redLight,
-        border: epargne >= 0 ? 'none' : `1px solid #fca5a5`,
       }}>
-        <div style={{ fontSize: '11px', color: epargne >= 0 ? COLORS.gray400 : COLORS.red, fontWeight: '700', letterSpacing: '0.06em', marginBottom: '6px' }}>
+        <div style={{ fontSize: '11px', color: COLORS.gray400, fontWeight: '700', letterSpacing: '0.06em', marginBottom: '6px' }}>
           ÉPARGNE DISPONIBLE {situation === 'foyer' ? '· FOYER' : ''}
         </div>
         <div style={{ fontSize: '36px', fontWeight: '800', color: epargne >= 0 ? 'white' : COLORS.red }}>
-          {epargne.toLocaleString()} <span style={{ fontSize: '18px', fontWeight: '400', color: epargne >= 0 ? COLORS.gray400 : COLORS.red }}>EUR</span>
+          {epargne.toLocaleString()} <span style={{ fontSize: '18px', fontWeight: '400', color: COLORS.gray400 }}>EUR</span>
         </div>
         {totalRevenus > 0 && (
-          <div style={{ fontSize: '13px', color: epargne >= 0 ? COLORS.gray400 : COLORS.red, marginTop: '6px' }}>
+          <div style={{ fontSize: '13px', color: COLORS.gray400, marginTop: '6px' }}>
             Taux d'épargne : {Math.round((epargne / totalRevenus) * 100)}%
           </div>
         )}
       </div>
 
-      {/* BOUTON SAVE */}
       <button onClick={sauvegarder} disabled={loading} style={{
         width: '100%', background: COLORS.blue, color: 'white',
         padding: '16px', borderRadius: '12px', border: 'none',
         fontSize: '15px', fontWeight: '700', cursor: loading ? 'not-allowed' : 'pointer',
         opacity: loading ? 0.7 : 1, letterSpacing: '0.02em',
-        transition: 'all 0.2s ease',
       }}>
         {loading ? 'Sauvegarde en cours...' : 'Sauvegarder et calculer mon score'}
       </button>
