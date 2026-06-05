@@ -8,89 +8,99 @@ import Login from './pages/Login'
 import PatrimoineNet from './pages/PatrimoineNet'
 import { supabase } from './supabase'
 
+function useCountUp(target, duration = 400) {
+  const [value, setValue] = useState(0)
+  useEffect(() => {
+    if (!target) return
+    const start = Date.now()
+    const timer = setInterval(() => {
+      const elapsed = Date.now() - start
+      const progress = Math.min(elapsed / duration, 1)
+      const eased = 1 - Math.pow(1 - progress, 3)
+      setValue(Math.round(eased * target))
+      if (progress >= 1) clearInterval(timer)
+    }, 16)
+    return () => clearInterval(timer)
+  }, [target, duration])
+  return value
+}
+
+function AnimatedNumber({ value, suffix = '' }) {
+  const animated = useCountUp(value)
+  return <span>{animated.toLocaleString()}{suffix}</span>
+}
+
+const COLORS = {
+  navy: '#0f2744',
+  navyLight: '#163459',
+  blue: '#1a56db',
+  blueLight: '#3b82f6',
+  bluePale: '#eff6ff',
+  white: '#ffffff',
+  gray50: '#f8fafc',
+  gray100: '#f1f5f9',
+  gray200: '#e2e8f0',
+  gray400: '#94a3b8',
+  gray600: '#475569',
+  gray800: '#1e293b',
+  green: '#059669',
+  greenLight: '#d1fae5',
+  red: '#dc2626',
+  redLight: '#fee2e2',
+  amber: '#d97706',
+  amberLight: '#fef3c7',
+}
+
 const navItems = [
-  { label: 'Dashboard' },
-  { label: 'Saisie donnees', sub: 'Revenus, depenses, credits' },
-  { label: 'Analyse bancaire', sub: 'Score et indicateurs' },
-  { label: 'Patrimoine net', sub: 'Actifs, passifs, evolution' },
-  { label: 'Simulations', sub: 'Projections et scenarios' },
-  { label: 'Alertes', sub: 'Points de vigilance' },
-  { label: 'Recommandations', sub: 'Plan action personnalise' },
-  { label: 'Guide utilisation', sub: 'Mode emploi' },
+  { label: 'Dashboard', icon: '⊞' },
+  { label: 'Saisie donnees', sub: 'Revenus, depenses, credits', icon: '✎' },
+  { label: 'Analyse bancaire', sub: 'Score et indicateurs', icon: '◎' },
+  { label: 'Patrimoine net', sub: 'Actifs, passifs, evolution', icon: '◈' },
+  { label: 'Simulations', sub: 'Projections et scenarios', icon: '⟁' },
+  { label: 'Alertes', sub: 'Points de vigilance', icon: '⚑' },
+  { label: 'Recommandations', sub: 'Plan action personnalise', icon: '★' },
+  { label: 'Guide utilisation', sub: 'Mode emploi', icon: '?' },
 ]
 
-const S = {
-  app: { display:'flex', minHeight:'100vh', background:'#f3f4f6', fontFamily:'sans-serif' },
-  sidebar: { width:'256px', background:'#0f172a', color:'white', display:'flex', flexDirection:'column', flexShrink:0 },
-  sidebarHeader: { padding:'16px', borderBottom:'1px solid #334155' },
-  sidebarTitle: { fontWeight:'bold', fontSize:'18px' },
-  sidebarSub: { fontSize:'12px', color:'#94a3b8' },
-  nav: { flex:1, padding:'8px' },
-  navBtn: (active) => ({ width:'100%', textAlign:'left', padding:'12px', borderRadius:'8px', marginBottom:'4px', background: active ? '#2563eb' : 'transparent', border:'none', color:'white', cursor:'pointer' }),
-  navLabel: { fontSize:'14px', fontWeight:'500' },
-  navSub: { fontSize:'12px', color:'#94a3b8', marginTop:'2px' },
-  tip: { padding:'12px', margin:'12px', background:'#1e293b', borderRadius:'8px', fontSize:'12px', color:'#cbd5e1' },
-  tipTitle: { fontWeight:'500', color:'#facc15', marginBottom:'4px' },
-  main: { flex:1, overflow:'auto' },
-  header: { background:'#0f172a', color:'white', padding:'12px 24px', display:'flex', alignItems:'center', justifyContent:'space-between' },
-  headerLeft: { display:'flex', alignItems:'center', gap:'16px' },
-  menuBtn: { background:'none', border:'none', color:'white', fontSize:'24px', cursor:'pointer' },
-  profileLabel: { fontSize:'12px', color:'#94a3b8' },
-  profileName: { fontWeight:'500' },
-  overlay: { position:'fixed', inset:0, background:'#0f172a', zIndex:50, color:'white', display:'flex', flexDirection:'column' },
-  overlayHeader: { padding:'16px', display:'flex', justifyContent:'space-between', alignItems:'center', borderBottom:'1px solid #334155' },
-  closeBtn: { background:'none', border:'none', color:'white', fontSize:'28px', cursor:'pointer' },
-  page: { padding:'24px', display:'flex', flexDirection:'column', gap:'24px' },
-  grid4: { display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(220px, 1fr))', gap:'16px' },
-  grid3: { display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(280px, 1fr))', gap:'16px' },
-  grid2: { display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(280px, 1fr))', gap:'16px' },
-  card: { background:'white', borderRadius:'12px', padding:'16px', boxShadow:'0 1px 3px rgba(0,0,0,0.1)' },
-  cardTitle: { fontSize:'11px', fontWeight:'600', color:'#6b7280', textTransform:'uppercase', marginBottom:'12px' },
-  bigNum: { fontSize:'30px', fontWeight:'bold' },
-  green: { color:'#22c55e', fontSize:'14px', fontWeight:'500', marginTop:'4px' },
-  muted: { fontSize:'12px', color:'#9ca3af' },
+function StatCard({ title, children, accent }) {
+  return (
+    <div style={{
+      background: COLORS.white,
+      borderRadius: '16px',
+      padding: '20px',
+      boxShadow: '0 1px 4px rgba(15,39,68,0.08), 0 4px 16px rgba(15,39,68,0.04)',
+      borderTop: `3px solid ${accent || COLORS.blue}`,
+    }}>
+      <div style={{ fontSize: '11px', fontWeight: '700', color: COLORS.gray400, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '14px' }}>{title}</div>
+      {children}
+    </div>
+  )
 }
 
 function DashboardPage({ profil, vueMode, setVueMode }) {
-  if (!profil) return <div style={{padding:'24px', color:'#6b7280'}}>Chargement...</div>
+  if (!profil) return (
+    <div style={{ padding: '48px', textAlign: 'center', color: COLORS.gray400 }}>
+      <div style={{ fontSize: '32px', marginBottom: '12px' }}>⟳</div>
+      <div>Chargement de votre profil...</div>
+    </div>
+  )
 
   const estFoyer = profil.situation === 'foyer'
-
-  // Revenus selon le mode (revenus fonciers déjà divisés par 2 si commun dans saisie)
   const revenus1 = Math.round((profil.salaire || 0) + (profil.revenus_fonciers || 0) + (profil.autres_revenus || 0))
   const revenus2 = Math.round((profil.salaire2 || 0) + (profil.revenus_fonciers2 || 0) + (profil.autres_revenus2 || 0))
   const totalRevenus = vueMode === 'foyer' ? revenus1 + revenus2 : revenus1
-
-  // Depenses selon le mode
   const depenses1 = Math.round((profil.logement || 0) + (profil.alimentation || 0) + (profil.transports || 0) + (profil.loisirs || 0) + (profil.sante || 0) + (profil.autres_depenses || 0))
   const depenses2 = Math.round((profil.logement2 || 0) + (profil.alimentation2 || 0) + (profil.transports2 || 0) + (profil.loisirs2 || 0) + (profil.sante2 || 0) + (profil.autres_depenses2 || 0))
   const totalDepenses = vueMode === 'foyer' ? depenses1 + depenses2 : depenses1
-
-  // Credits — mensualité entière même si commun
   const creditsImmo = profil.credits_immo || []
   const creditsAutre = profil.credits_autre || []
-  const totalMensualites = Math.round([...creditsImmo, ...creditsAutre].reduce((a, c) => {
-    return a + (parseFloat(c.mensualite) || 0)
-  }, 0))
-
-  // Loyer pour taux endettement
-  const loyer = vueMode === 'foyer'
-    ? Math.round((profil.logement || 0) + (profil.logement2 || 0))
-    : Math.round(profil.logement || 0)
-
-  // Charges totales pour taux endettement = crédits + loyer
+  const totalMensualites = Math.round([...creditsImmo, ...creditsAutre].reduce((a, c) => a + (parseFloat(c.mensualite) || 0), 0))
+  const loyer = vueMode === 'foyer' ? Math.round((profil.logement || 0) + (profil.logement2 || 0)) : Math.round(profil.logement || 0)
   const chargesEndettement = totalMensualites + loyer
-
-  // Taux endettement bancaire réel
   const tauxEndettement = totalRevenus > 0 ? Math.round((chargesEndettement / totalRevenus) * 100) : 0
-
-  // Reste à vivre = revenus - crédits - loyer
   const resteAVivre = totalRevenus - chargesEndettement
-
-  // Epargne disponible = revenus - toutes dépenses - crédits
   const epargne = totalRevenus - totalDepenses - totalMensualites
   const tauxEpargne = totalRevenus > 0 ? Math.round((epargne / totalRevenus) * 100) : 0
-
   const score = Math.min(100, Math.max(0, Math.round(50 + tauxEpargne - tauxEndettement)))
   const capaciteEmprunt = Math.round(totalRevenus * 0.33 * 12 * 20)
   const mensualiteMax = Math.round(totalRevenus * 0.33)
@@ -112,12 +122,12 @@ function DashboardPage({ profil, vueMode, setVueMode }) {
   }
 
   const depensesData = [
-    { name: 'Logement', value: depensesBase.logement, color: '#1e3a5f' },
-    { name: 'Alimentation', value: depensesBase.alimentation, color: '#2563eb' },
-    { name: 'Transports', value: depensesBase.transports, color: '#16a34a' },
-    { name: 'Loisirs', value: depensesBase.loisirs, color: '#ca8a04' },
-    { name: 'Sante', value: depensesBase.sante, color: '#dc2626' },
-    { name: 'Autres', value: depensesBase.autres, color: '#9ca3af' },
+    { name: 'Logement', value: depensesBase.logement, color: COLORS.navy },
+    { name: 'Alimentation', value: depensesBase.alimentation, color: COLORS.blue },
+    { name: 'Transports', value: depensesBase.transports, color: COLORS.green },
+    { name: 'Loisirs', value: depensesBase.loisirs, color: COLORS.amber },
+    { name: 'Sante', value: depensesBase.sante, color: COLORS.red },
+    { name: 'Autres', value: depensesBase.autres, color: COLORS.gray400 },
   ].filter(d => d.value > 0)
 
   const patrimoine = [
@@ -130,132 +140,180 @@ function DashboardPage({ profil, vueMode, setVueMode }) {
     { mois: 'Auj', valeur: Math.round(epargne * 7) },
   ]
 
+  const scoreColor = score >= 70 ? COLORS.green : score >= 50 ? COLORS.amber : COLORS.red
+  const scoreLabel = score >= 70 ? 'Profil solide' : score >= 50 ? 'Profil correct' : 'A ameliorer'
+
   return (
-    <div style={S.page}>
+    <div style={{ padding: '28px', display: 'flex', flexDirection: 'column', gap: '24px', background: COLORS.gray50, minHeight: '100%' }}>
 
-      {estFoyer && (
-        <div style={{display:'flex', gap:'12px', alignItems:'center'}}>
-          <span style={{fontSize:'14px', color:'#6b7280', fontWeight:'500'}}>Vue :</span>
-          {['personnel', 'foyer'].map(mode => (
-            <button key={mode} onClick={() => setVueMode(mode)} style={{
-              padding:'8px 16px', borderRadius:'8px', border: vueMode === mode ? '2px solid #2563eb' : '1px solid #d1d5db',
-              background: vueMode === mode ? '#eff6ff' : 'white', color: vueMode === mode ? '#2563eb' : '#374151',
-              fontWeight: vueMode === mode ? '600' : '400', cursor:'pointer', fontSize:'14px'
-            }}>
-              {mode === 'personnel' ? '👤 Personnel' : '👨‍👩‍👧 Foyer'}
-            </button>
-          ))}
-          <span style={{fontSize:'12px', color:'#9ca3af'}}>
-            {vueMode === 'foyer' ? 'Donnees combinees des deux conjoints' : 'Donnees du Conjoint 1 uniquement'}
-          </span>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div>
+          <h1 style={{ fontSize: '22px', fontWeight: '700', color: COLORS.navy, margin: 0 }}>Tableau de bord</h1>
+          <p style={{ fontSize: '13px', color: COLORS.gray400, margin: '4px 0 0' }}>Vue d'ensemble de votre situation financière</p>
         </div>
-      )}
-
-      <div style={S.grid4}>
-        <div style={S.card}>
-          <div style={S.cardTitle}>Score financier global</div>
-          <div style={{display:'flex', flexDirection:'column', alignItems:'center'}}>
-            <div style={{position:'relative', width:'96px', height:'96px'}}>
-              <svg viewBox="0 0 100 100" style={{width:'100%', height:'100%', transform:'rotate(-90deg)'}}>
-                <circle cx="50" cy="50" r="40" fill="none" stroke="#e5e7eb" strokeWidth="10"/>
-                <circle cx="50" cy="50" r="40" fill="none" stroke="#16a34a" strokeWidth="10" strokeDasharray={`${score*2.51} ${100*2.51}`}/>
-              </svg>
-              <div style={{position:'absolute', inset:0, display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center'}}>
-                <span style={{fontSize:'24px', fontWeight:'bold'}}>{score}</span>
-                <span style={{fontSize:'12px', color:'#9ca3af'}}>/100</span>
-              </div>
-            </div>
-            <div style={{color:'#16a34a', fontWeight:'600', marginTop:'4px'}}>{score >= 70 ? 'Profil solide' : score >= 50 ? 'Profil correct' : 'A ameliorer'}</div>
+        {estFoyer && (
+          <div style={{ display: 'flex', gap: '8px', background: COLORS.white, padding: '4px', borderRadius: '10px', boxShadow: '0 1px 4px rgba(15,39,68,0.08)' }}>
+            {['personnel', 'foyer'].map(mode => (
+              <button key={mode} onClick={() => setVueMode(mode)} style={{
+                padding: '8px 16px', borderRadius: '8px', border: 'none',
+                background: vueMode === mode ? COLORS.navy : 'transparent',
+                color: vueMode === mode ? 'white' : COLORS.gray600,
+                fontWeight: vueMode === mode ? '600' : '400',
+                cursor: 'pointer', fontSize: '13px', transition: 'all 0.3s ease'
+              }}>
+                {mode === 'personnel' ? '👤 Personnel' : '👨‍👩‍👧 Foyer'}
+              </button>
+            ))}
           </div>
-        </div>
-
-        <div style={S.card}>
-          <div style={S.cardTitle}>Epargne mensuelle {vueMode === 'foyer' ? '(foyer)' : '(personnel)'}</div>
-          <div style={S.bigNum}>{epargne.toLocaleString()} EUR</div>
-          <div style={{...S.green, color: tauxEpargne >= 15 ? '#22c55e' : '#f59e0b'}}>{tauxEpargne}%</div>
-          <div style={S.muted}>Taux epargne</div>
-          <div style={{marginTop:'12px', padding:'8px', background:'#f9fafb', borderRadius:'8px', fontSize:'12px', color:'#6b7280', textAlign:'center'}}>Objectif : 15 a 20%</div>
-        </div>
-
-        <div style={S.card}>
-          <div style={S.cardTitle}>Taux endettement</div>
-          <div style={S.bigNum}>{tauxEndettement}%</div>
-          <div style={{...S.green, color: tauxEndettement <= 33 ? '#22c55e' : '#ef4444'}}>{tauxEndettement <= 33 ? 'OK' : 'Eleve'}</div>
-          <div style={{fontSize:'11px', color:'#6b7280', marginTop:'4px'}}>
-            Credits : {totalMensualites.toLocaleString()} EUR + Loyer : {loyer.toLocaleString()} EUR
-          </div>
-          <div style={{marginTop:'8px', height:'12px', borderRadius:'9999px', overflow:'hidden', display:'flex'}}>
-            <div style={{background:'#22c55e', flex:1}}/>
-            <div style={{background:'#facc15', width:'16%'}}/>
-            <div style={{background:'#ef4444', width:'25%'}}/>
-          </div>
-          <div style={{display:'flex', justifyContent:'space-between', fontSize:'11px', color:'#9ca3af', marginTop:'4px'}}>
-            <span>0%</span><span>33%</span><span>50%</span><span>100%</span>
-          </div>
-          <div style={{marginTop:'12px', padding:'8px', background: resteAVivre >= 0 ? '#f0fdf4' : '#fef2f2', borderRadius:'8px'}}>
-            <div style={{fontSize:'11px', color:'#6b7280'}}>Reste a vivre</div>
-            <div style={{fontSize:'18px', fontWeight:'bold', color: resteAVivre >= 0 ? '#15803d' : '#b91c1c'}}>{resteAVivre.toLocaleString()} EUR</div>
-          </div>
-        </div>
-
-        <div style={S.card}>
-          <div style={S.cardTitle}>Revenus / Depenses {vueMode === 'foyer' ? '(foyer)' : '(personnel)'}</div>
-          <div style={{fontSize:'14px', color:'#6b7280', marginBottom:'4px'}}>Revenus</div>
-          <div style={{fontSize:'22px', fontWeight:'bold', color:'#1d4ed8'}}>{totalRevenus.toLocaleString()} EUR</div>
-          <div style={{fontSize:'14px', color:'#6b7280', marginTop:'8px', marginBottom:'4px'}}>Depenses</div>
-          <div style={{fontSize:'22px', fontWeight:'bold', color:'#dc2626'}}>{totalDepenses.toLocaleString()} EUR</div>
-        </div>
+        )}
       </div>
 
-      <div style={S.grid3}>
-        <div style={S.card}>
-          <div style={S.cardTitle}>Depenses mensuelles</div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px' }}>
+        <StatCard title="Score financier" accent={scoreColor}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+            <div style={{ position: 'relative', width: '80px', height: '80px', flexShrink: 0 }}>
+              <svg viewBox="0 0 100 100" style={{ width: '100%', height: '100%', transform: 'rotate(-90deg)' }}>
+                <circle cx="50" cy="50" r="40" fill="none" stroke={COLORS.gray200} strokeWidth="10" />
+                <circle cx="50" cy="50" r="40" fill="none" stroke={scoreColor} strokeWidth="10"
+                  strokeDasharray={`${score * 2.51} ${100 * 2.51}`}
+                  style={{ transition: 'stroke-dasharray 0.6s ease' }} />
+              </svg>
+              <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+                <span style={{ fontSize: '20px', fontWeight: '800', color: COLORS.navy }}>{score}</span>
+                <span style={{ fontSize: '10px', color: COLORS.gray400 }}>/100</span>
+              </div>
+            </div>
+            <div>
+              <div style={{ fontSize: '16px', fontWeight: '700', color: scoreColor }}>{scoreLabel}</div>
+              <div style={{ fontSize: '12px', color: COLORS.gray400, marginTop: '4px' }}>Indice de santé financière</div>
+            </div>
+          </div>
+        </StatCard>
+
+        <StatCard title={`Epargne mensuelle ${vueMode === 'foyer' ? '· Foyer' : ''}`} accent={COLORS.blue}>
+          <div style={{ fontSize: '28px', fontWeight: '800', color: COLORS.navy }}>
+            <AnimatedNumber value={epargne} /> <span style={{ fontSize: '14px', fontWeight: '400', color: COLORS.gray400 }}>EUR</span>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '8px' }}>
+            <div style={{
+              display: 'inline-block', padding: '3px 8px', borderRadius: '6px',
+              background: tauxEpargne >= 15 ? COLORS.greenLight : COLORS.amberLight,
+              color: tauxEpargne >= 15 ? COLORS.green : COLORS.amber,
+              fontSize: '12px', fontWeight: '600'
+            }}>{tauxEpargne}% d'épargne</div>
+          </div>
+          <div style={{ marginTop: '10px', padding: '8px 10px', background: COLORS.gray100, borderRadius: '8px', fontSize: '12px', color: COLORS.gray600 }}>
+            Objectif : 15 à 20%
+          </div>
+        </StatCard>
+
+        <StatCard title="Taux d'endettement" accent={tauxEndettement <= 33 ? COLORS.green : COLORS.red}>
+          <div style={{ fontSize: '28px', fontWeight: '800', color: COLORS.navy }}>
+            <AnimatedNumber value={tauxEndettement} suffix="%" />
+          </div>
+          <div style={{ fontSize: '12px', color: COLORS.gray400, margin: '4px 0 10px' }}>
+            Crédits {totalMensualites.toLocaleString()} + Loyer {loyer.toLocaleString()} EUR
+          </div>
+          <div style={{ height: '6px', borderRadius: '3px', background: COLORS.gray200, overflow: 'hidden', marginBottom: '8px' }}>
+            <div style={{
+              height: '100%', borderRadius: '3px',
+              width: `${Math.min(tauxEndettement, 100)}%`,
+              background: tauxEndettement <= 33 ? COLORS.green : tauxEndettement <= 50 ? COLORS.amber : COLORS.red,
+              transition: 'width 0.6s ease'
+            }} />
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', color: COLORS.gray400, marginBottom: '10px' }}>
+            <span>0%</span><span>33%</span><span>50%</span><span>100%</span>
+          </div>
+          <div style={{ padding: '8px 10px', borderRadius: '8px', background: resteAVivre >= 0 ? COLORS.greenLight : COLORS.redLight }}>
+            <div style={{ fontSize: '11px', color: COLORS.gray600 }}>Reste à vivre</div>
+            <div style={{ fontSize: '16px', fontWeight: '700', color: resteAVivre >= 0 ? COLORS.green : COLORS.red }}>
+              <AnimatedNumber value={resteAVivre} /> EUR
+            </div>
+          </div>
+        </StatCard>
+
+        <StatCard title={`Revenus · Dépenses ${vueMode === 'foyer' ? '· Foyer' : ''}`} accent={COLORS.navy}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 12px', background: COLORS.bluePale, borderRadius: '10px' }}>
+              <div>
+                <div style={{ fontSize: '11px', color: COLORS.blue, fontWeight: '600' }}>REVENUS</div>
+                <div style={{ fontSize: '20px', fontWeight: '800', color: COLORS.navy }}>
+                  <AnimatedNumber value={totalRevenus} /> <span style={{ fontSize: '12px', fontWeight: '400' }}>EUR</span>
+                </div>
+              </div>
+              <div style={{ fontSize: '24px' }}>↑</div>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 12px', background: COLORS.redLight, borderRadius: '10px' }}>
+              <div>
+                <div style={{ fontSize: '11px', color: COLORS.red, fontWeight: '600' }}>DEPENSES</div>
+                <div style={{ fontSize: '20px', fontWeight: '800', color: COLORS.navy }}>
+                  <AnimatedNumber value={totalDepenses} /> <span style={{ fontSize: '12px', fontWeight: '400' }}>EUR</span>
+                </div>
+              </div>
+              <div style={{ fontSize: '24px' }}>↓</div>
+            </div>
+          </div>
+        </StatCard>
+      </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '16px' }}>
+        <div style={{ background: COLORS.white, borderRadius: '16px', padding: '20px', boxShadow: '0 1px 4px rgba(15,39,68,0.08)' }}>
+          <div style={{ fontSize: '11px', fontWeight: '700', color: COLORS.gray400, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '16px' }}>Répartition des dépenses</div>
           {depensesData.length > 0 ? (
-            <div style={{display:'flex', alignItems:'center', gap:'16px'}}>
-              <PieChart width={120} height={120}>
-                <Pie data={depensesData} cx={55} cy={55} innerRadius={35} outerRadius={55} dataKey="value">
-                  {depensesData.map((e,i) => <Cell key={i} fill={e.color}/>)}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+              <PieChart width={110} height={110}>
+                <Pie data={depensesData} cx={50} cy={50} innerRadius={30} outerRadius={50} dataKey="value" strokeWidth={0}>
+                  {depensesData.map((e, i) => <Cell key={i} fill={e.color} />)}
                 </Pie>
               </PieChart>
-              <div style={{fontSize:'12px', display:'flex', flexDirection:'column', gap:'4px'}}>
+              <div style={{ fontSize: '12px', display: 'flex', flexDirection: 'column', gap: '6px', flex: 1 }}>
                 {depensesData.map(d => (
-                  <div key={d.name} style={{display:'flex', alignItems:'center', gap:'4px'}}>
-                    <div style={{width:'8px', height:'8px', borderRadius:'50%', background:d.color}}/>
-                    <span>{d.name}</span>
-                    <span style={{marginLeft:'4px', fontWeight:'500'}}>{d.value}</span>
+                  <div key={d.name} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <div style={{ width: '8px', height: '8px', borderRadius: '2px', background: d.color }} />
+                      <span style={{ color: COLORS.gray600 }}>{d.name}</span>
+                    </div>
+                    <span style={{ fontWeight: '600', color: COLORS.navy }}>{d.value.toLocaleString()}</span>
                   </div>
                 ))}
               </div>
             </div>
-          ) : <div style={{color:'#9ca3af', fontSize:'14px'}}>Aucune depense saisie</div>}
+          ) : <div style={{ color: COLORS.gray400, fontSize: '14px', textAlign: 'center', padding: '20px' }}>Aucune dépense saisie</div>}
         </div>
 
-        <div style={S.card}>
-          <div style={S.cardTitle}>Evolution epargne (projection)</div>
-          <ResponsiveContainer width="100%" height={160}>
+        <div style={{ background: COLORS.white, borderRadius: '16px', padding: '20px', boxShadow: '0 1px 4px rgba(15,39,68,0.08)' }}>
+          <div style={{ fontSize: '11px', fontWeight: '700', color: COLORS.gray400, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '16px' }}>Projection épargne</div>
+          <ResponsiveContainer width="100%" height={150}>
             <LineChart data={patrimoine}>
-              <XAxis dataKey="mois" tick={{fontSize:10}}/>
-              <YAxis tick={{fontSize:10}}/>
-              <Tooltip/>
-              <Line type="monotone" dataKey="valeur" stroke="#1e3a5f" strokeWidth={2} dot={{r:3}}/>
+              <XAxis dataKey="mois" tick={{ fontSize: 10, fill: COLORS.gray400 }} axisLine={false} tickLine={false} />
+              <YAxis tick={{ fontSize: 10, fill: COLORS.gray400 }} axisLine={false} tickLine={false} tickFormatter={v => `${(v / 1000).toFixed(0)}k`} />
+              <Tooltip contentStyle={{ background: COLORS.navy, border: 'none', borderRadius: '8px', color: 'white', fontSize: '12px' }} formatter={v => [`${v.toLocaleString()} EUR`]} />
+              <Line type="monotone" dataKey="valeur" stroke={COLORS.blue} strokeWidth={2.5} dot={false} />
             </LineChart>
           </ResponsiveContainer>
         </div>
 
-        <div style={S.card}>
-          <div style={S.cardTitle}>Capacite emprunt</div>
-          <div style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:'16px', marginTop:'16px'}}>
-            <div style={{textAlign:'center'}}>
-              <div style={{fontSize:'12px', color:'#6b7280', marginBottom:'4px'}}>Montant empruntable</div>
-              <div style={{fontSize:'22px', fontWeight:'bold'}}>{capaciteEmprunt.toLocaleString()} EUR</div>
+        <div style={{ background: COLORS.navy, borderRadius: '16px', padding: '20px', boxShadow: '0 1px 4px rgba(15,39,68,0.08)' }}>
+          <div style={{ fontSize: '11px', fontWeight: '700', color: COLORS.gray400, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '16px' }}>Capacité d'emprunt</div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '16px' }}>
+            <div style={{ textAlign: 'center', background: COLORS.navyLight, borderRadius: '10px', padding: '12px' }}>
+              <div style={{ fontSize: '11px', color: COLORS.gray400, marginBottom: '6px' }}>Montant max</div>
+              <div style={{ fontSize: '18px', fontWeight: '800', color: 'white' }}>
+                <AnimatedNumber value={Math.round(capaciteEmprunt / 1000)} suffix="k" />
+              </div>
+              <div style={{ fontSize: '11px', color: COLORS.gray400 }}>EUR</div>
             </div>
-            <div style={{textAlign:'center'}}>
-              <div style={{fontSize:'12px', color:'#6b7280', marginBottom:'4px'}}>Mensualite max</div>
-              <div style={{fontSize:'22px', fontWeight:'bold'}}>{mensualiteMax.toLocaleString()} EUR</div>
+            <div style={{ textAlign: 'center', background: COLORS.navyLight, borderRadius: '10px', padding: '12px' }}>
+              <div style={{ fontSize: '11px', color: COLORS.gray400, marginBottom: '6px' }}>Mensualité max</div>
+              <div style={{ fontSize: '18px', fontWeight: '800', color: 'white' }}>
+                <AnimatedNumber value={mensualiteMax} />
+              </div>
+              <div style={{ fontSize: '11px', color: COLORS.gray400 }}>EUR/mois</div>
             </div>
           </div>
-          <div style={{marginTop:'16px', padding:'12px', background:'#f9fafb', borderRadius:'8px', fontSize:'12px', color:'#6b7280', textAlign:'center'}}>
-            Taux endettement apres projet : {Math.min(100, tauxEndettement + 10)}%
+          <div style={{ padding: '10px 12px', background: COLORS.navyLight, borderRadius: '10px', fontSize: '12px', color: COLORS.gray400, textAlign: 'center' }}>
+            Taux endettement après projet : {Math.min(100, tauxEndettement + 10)}%
           </div>
         </div>
       </div>
@@ -304,74 +362,102 @@ export default function App() {
   }
 
   const renderPage = () => {
-    switch(active) {
-      case 'Saisie donnees': return <SaisieDonnees/>
-      case 'Analyse bancaire': return <AnalyseBancaire/>
-      case 'Patrimoine net': return <PatrimoineNet/>
-      case 'Simulations': return <Simulations/>
-      case 'Alertes': return <Alertes/>
-      default: return <DashboardPage profil={profil} vueMode={vueMode} setVueMode={setVueMode}/>
+    const pages = {
+      'Saisie donnees': <SaisieDonnees />,
+      'Analyse bancaire': <AnalyseBancaire />,
+      'Patrimoine net': <PatrimoineNet />,
+      'Simulations': <Simulations />,
+      'Alertes': <Alertes />,
     }
+    return pages[active] || <DashboardPage profil={profil} vueMode={vueMode} setVueMode={setVueMode} />
   }
 
   if (!user) return <Login onLogin={() => supabase.auth.getSession().then(({ data: { session } }) => setUser(session?.user))} />
 
   return (
-    <div style={S.app}>
-      <div style={{...S.sidebar, display: window.innerWidth < 768 ? 'none' : 'flex'}}>
-        <div style={S.sidebarHeader}>
-          <div style={S.sidebarTitle}>BANQUE INSIDE</div>
-          <div style={S.sidebarSub}>ANALYSE FINANCIERE PERSONNELLE</div>
+    <div style={{ display: 'flex', minHeight: '100vh', background: COLORS.gray50, fontFamily: "'Inter', -apple-system, sans-serif" }}>
+
+      {/* SIDEBAR */}
+      <div style={{ width: '260px', background: COLORS.navy, color: 'white', display: window.innerWidth < 768 ? 'none' : 'flex', flexDirection: 'column', flexShrink: 0, position: 'sticky', top: 0, height: '100vh' }}>
+        <div style={{ padding: '24px 20px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+          <div style={{ fontSize: '16px', fontWeight: '800', letterSpacing: '0.05em', color: 'white' }}>BANQUE INSIDE</div>
+          <div style={{ fontSize: '11px', color: COLORS.gray400, marginTop: '3px', letterSpacing: '0.08em' }}>ANALYSE FINANCIÈRE</div>
         </div>
-        <nav style={S.nav}>
-          {navItems.map(item => (
-            <button key={item.label} onClick={() => setActive(item.label)} style={S.navBtn(active === item.label)}>
-              <div style={S.navLabel}>{item.label}</div>
-              {item.sub && <div style={S.navSub}>{item.sub}</div>}
-            </button>
-          ))}
+        <nav style={{ flex: 1, padding: '12px 10px', overflowY: 'auto' }}>
+          {navItems.map(item => {
+            const isActive = active === item.label
+            return (
+              <button key={item.label} onClick={() => setActive(item.label)} style={{
+                width: '100%', textAlign: 'left', padding: '10px 12px',
+                borderRadius: '10px', marginBottom: '2px',
+                background: isActive ? 'rgba(255,255,255,0.1)' : 'transparent',
+                border: isActive ? '1px solid rgba(255,255,255,0.12)' : '1px solid transparent',
+                color: isActive ? 'white' : COLORS.gray400,
+                cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px',
+                transition: 'all 0.25s ease',
+              }}>
+                <span style={{ fontSize: '14px', opacity: 0.7 }}>{item.icon}</span>
+                <div>
+                  <div style={{ fontSize: '13px', fontWeight: isActive ? '600' : '400' }}>{item.label}</div>
+                  {item.sub && <div style={{ fontSize: '11px', color: COLORS.gray400, marginTop: '1px' }}>{item.sub}</div>}
+                </div>
+                {isActive && <div style={{ marginLeft: 'auto', width: '4px', height: '4px', borderRadius: '50%', background: COLORS.blueLight }} />}
+              </button>
+            )
+          })}
         </nav>
-        <div style={S.tip}>
-          <div style={S.tipTitle}>Conseil du jour</div>
-          Augmentez votre taux epargne mensuel.
+        <div style={{ padding: '16px', margin: '10px', background: 'rgba(255,255,255,0.04)', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.06)' }}>
+          <div style={{ fontSize: '11px', fontWeight: '700', color: '#fbbf24', marginBottom: '6px', letterSpacing: '0.05em' }}>💡 CONSEIL DU JOUR</div>
+          <div style={{ fontSize: '12px', color: COLORS.gray400, lineHeight: '1.5' }}>Augmentez votre taux d'épargne mensuel pour optimiser votre patrimoine.</div>
         </div>
       </div>
 
+      {/* MENU MOBILE */}
       {menuOpen && (
-        <div style={S.overlay}>
-          <div style={S.overlayHeader}>
-            <div style={S.sidebarTitle}>BANQUE INSIDE</div>
-            <button style={S.closeBtn} onClick={() => setMenuOpen(false)}>×</button>
+        <div style={{ position: 'fixed', inset: 0, background: COLORS.navy, zIndex: 50, color: 'white', display: 'flex', flexDirection: 'column' }}>
+          <div style={{ padding: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+            <div style={{ fontSize: '16px', fontWeight: '800' }}>BANQUE INSIDE</div>
+            <button style={{ background: 'none', border: 'none', color: 'white', fontSize: '24px', cursor: 'pointer' }} onClick={() => setMenuOpen(false)}>×</button>
           </div>
-          <nav style={S.nav}>
+          <nav style={{ flex: 1, padding: '12px 10px' }}>
             {navItems.map(item => (
-              <button key={item.label} onClick={() => { setActive(item.label); setMenuOpen(false) }} style={{...S.navBtn(active === item.label), fontSize:'16px', padding:'16px'}}>
-                {item.label}
+              <button key={item.label} onClick={() => { setActive(item.label); setMenuOpen(false) }} style={{
+                width: '100%', textAlign: 'left', padding: '14px 16px', borderRadius: '10px', marginBottom: '4px',
+                background: active === item.label ? 'rgba(255,255,255,0.1)' : 'transparent',
+                border: 'none', color: 'white', cursor: 'pointer', fontSize: '15px'
+              }}>
+                {item.icon} {item.label}
               </button>
             ))}
           </nav>
-          <div style={{padding:'16px'}}>
-            <button onClick={deconnecter} style={{width:'100%', background:'#ef4444', color:'white', padding:'12px', borderRadius:'8px', border:'none', fontSize:'14px', cursor:'pointer'}}>
-              Se deconnecter
+          <div style={{ padding: '16px' }}>
+            <button onClick={deconnecter} style={{ width: '100%', background: COLORS.red, color: 'white', padding: '12px', borderRadius: '10px', border: 'none', fontSize: '14px', cursor: 'pointer' }}>
+              Se déconnecter
             </button>
           </div>
         </div>
       )}
 
-      <div style={S.main}>
-        <div style={S.header}>
-          <div style={S.headerLeft}>
-            <button style={S.menuBtn} onClick={() => setMenuOpen(true)}>☰</button>
+      {/* MAIN */}
+      <div style={{ flex: 1, overflow: 'auto', display: 'flex', flexDirection: 'column' }}>
+        <div style={{ background: COLORS.white, borderBottom: '1px solid ' + COLORS.gray200, padding: '0 24px', height: '60px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'sticky', top: 0, zIndex: 10 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+            <button style={{ background: 'none', border: 'none', color: COLORS.navy, fontSize: '20px', cursor: 'pointer', padding: '4px' }} onClick={() => setMenuOpen(true)}>☰</button>
             <div>
-              <div style={S.profileLabel}>Connecte en tant que</div>
-              <div style={S.profileName}>{user.email}</div>
+              <div style={{ fontSize: '11px', color: COLORS.gray400 }}>Connecté en tant que</div>
+              <div style={{ fontSize: '13px', fontWeight: '600', color: COLORS.navy }}>{user.email}</div>
             </div>
           </div>
-          <button onClick={deconnecter} style={{background:'#ef4444', color:'white', border:'none', padding:'6px 12px', borderRadius:'6px', fontSize:'12px', cursor:'pointer'}}>
-            Deconnexion
+          <button onClick={deconnecter} style={{
+            background: 'transparent', color: COLORS.red, border: '1px solid ' + COLORS.red,
+            padding: '6px 14px', borderRadius: '8px', fontSize: '12px', cursor: 'pointer', fontWeight: '500'
+          }}>
+            Déconnexion
           </button>
         </div>
-        {renderPage()}
+        <div style={{ flex: 1 }}>
+          {renderPage()}
+        </div>
       </div>
     </div>
   )
