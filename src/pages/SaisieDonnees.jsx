@@ -5,6 +5,140 @@ const creditVide = { mensualite: '', duree: '', capital: '', commun: false }
 const revenusVide = { salaire: '', fonciers: '', autres: '' }
 const depensesVide = { logement: '', alimentation: '', transports: '', loisirs: '', sante: '', autres: '' }
 
+const inputStyle = { width: '100%', border: '1px solid #d1d5db', borderRadius: '8px', padding: '10px 12px', fontSize: '14px', boxSizing: 'border-box' }
+const labelStyle = { fontSize: '12px', color: '#6b7280', display: 'block', marginBottom: '4px' }
+const cardStyle = { background: 'white', borderRadius: '12px', padding: '16px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', marginBottom: '16px' }
+const titleStyle = { fontWeight: '600', color: '#374151', marginBottom: '16px', paddingBottom: '8px', borderBottom: '1px solid #e5e7eb', fontSize: '15px' }
+
+function BlocRevenus({ revenus, setRevenus, label, couleur, estConjoint2, onDiviser }) {
+  return (
+    <div style={cardStyle}>
+      <div style={{ ...titleStyle, color: couleur }}>{label}</div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+        <div>
+          <label style={labelStyle}>Salaire net</label>
+          <input type="text" inputMode="numeric" style={inputStyle} placeholder="ex: 3000" value={revenus.salaire} onChange={e => setRevenus(prev => ({ ...prev, salaire: e.target.value }))} />
+        </div>
+        <div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+            <label style={{ ...labelStyle, marginBottom: 0 }}>Revenus fonciers</label>
+            {estConjoint2 && (
+              <button onClick={onDiviser} style={{ fontSize: '11px', color: '#7c3aed', background: '#f5f3ff', border: '1px solid #7c3aed', borderRadius: '6px', padding: '3px 8px', cursor: 'pointer' }}>
+                Diviser en 2 (commun)
+              </button>
+            )}
+          </div>
+          <input type="text" inputMode="numeric" style={inputStyle} placeholder="ex: 500" value={revenus.fonciers} onChange={e => setRevenus(prev => ({ ...prev, fonciers: e.target.value }))} />
+        </div>
+        <div>
+          <label style={labelStyle}>Autres revenus</label>
+          <input type="text" inputMode="numeric" style={inputStyle} placeholder="ex: 200" value={revenus.autres} onChange={e => setRevenus(prev => ({ ...prev, autres: e.target.value }))} />
+        </div>
+        <div style={{ background: '#eff6ff', borderRadius: '8px', padding: '12px' }}>
+          <div style={{ fontSize: '12px', color: '#2563eb' }}>Total revenus</div>
+          <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#1d4ed8' }}>
+            {Math.round(Object.values(revenus).reduce((a, b) => a + (parseFloat(b) || 0), 0)).toLocaleString()} EUR
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function BlocDepenses({ depenses, setDepenses, label, couleur }) {
+  return (
+    <div style={cardStyle}>
+      <div style={{ ...titleStyle, color: couleur }}>{label}</div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+        {[
+          { key: 'logement', label: 'Logement', placeholder: '1050' },
+          { key: 'alimentation', label: 'Alimentation', placeholder: '600' },
+          { key: 'transports', label: 'Transports', placeholder: '450' },
+          { key: 'loisirs', label: 'Loisirs', placeholder: '300' },
+          { key: 'sante', label: 'Sante', placeholder: '300' },
+          { key: 'autres', label: 'Autres', placeholder: '300' },
+        ].map(item => (
+          <div key={item.key}>
+            <label style={labelStyle}>{item.label}</label>
+            <input type="text" inputMode="numeric" style={inputStyle} placeholder={item.placeholder} value={depenses[item.key]} onChange={e => setDepenses(prev => ({ ...prev, [item.key]: e.target.value }))} />
+          </div>
+        ))}
+        <div style={{ background: '#fef2f2', borderRadius: '8px', padding: '12px' }}>
+          <div style={{ fontSize: '12px', color: '#dc2626' }}>Total depenses</div>
+          <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#b91c1c' }}>
+            {Math.round(Object.values(depenses).reduce((a, b) => a + (parseFloat(b) || 0), 0)).toLocaleString()} EUR
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function BlocCredits({ liste, setListe, couleur, emoji, label, situation }) {
+  const updateCredit = (index, champ, valeur) => {
+    setListe(prev => {
+      const copie = [...prev]
+      copie[index] = { ...copie[index], [champ]: valeur }
+      return copie
+    })
+  }
+
+  const toggleCommun = (index) => {
+    setListe(prev => {
+      const copie = [...prev]
+      copie[index] = { ...copie[index], commun: !copie[index].commun }
+      return copie
+    })
+  }
+
+  const ajouter = () => setListe(prev => [...prev, { ...creditVide }])
+  const supprimer = (index) => {
+    if (liste.length === 1) return
+    setListe(prev => prev.filter((_, i) => i !== index))
+  }
+
+  return (
+    <div style={{ marginBottom: '16px' }}>
+      <div style={{ fontWeight: '600', color: couleur, fontSize: '13px', marginBottom: '10px' }}>{emoji} {label}</div>
+      {liste.map((c, i) => (
+        <div key={i} style={{ background: '#f9fafb', borderRadius: '10px', padding: '12px', marginBottom: '10px', border: '1px solid #e5e7eb' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+            <span style={{ fontSize: '13px', fontWeight: '500', color: '#374151' }}>{label} {liste.length > 1 ? `#${i + 1}` : ''}</span>
+            {liste.length > 1 && (
+              <button onClick={() => supprimer(i)} style={{ background: '#fee2e2', color: '#b91c1c', border: 'none', borderRadius: '6px', padding: '4px 8px', fontSize: '12px', cursor: 'pointer' }}>
+                Supprimer
+              </button>
+            )}
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            <div>
+              <label style={labelStyle}>Mensualite (EUR)</label>
+              <input type="text" inputMode="numeric" style={inputStyle} placeholder="ex: 800" value={c.mensualite} onChange={e => updateCredit(i, 'mensualite', e.target.value)} />
+            </div>
+            <div>
+              <label style={labelStyle}>Duree restante (mois)</label>
+              <input type="text" inputMode="numeric" style={inputStyle} placeholder="ex: 240" value={c.duree} onChange={e => updateCredit(i, 'duree', e.target.value)} />
+            </div>
+            <div>
+              <label style={labelStyle}>Capital restant du (EUR)</label>
+              <input type="text" inputMode="numeric" style={inputStyle} placeholder="ex: 150000" value={c.capital} onChange={e => updateCredit(i, 'capital', e.target.value)} />
+            </div>
+            {situation === 'foyer' && (
+              <label style={{ fontSize: '12px', color: '#6b7280', display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
+                <input type="checkbox" checked={c.commun || false} onChange={() => toggleCommun(i)} />
+                Credit commun aux deux conjoints
+              </label>
+            )}
+          </div>
+        </div>
+      ))}
+      <button onClick={ajouter} style={{ width: '100%', background: 'white', color: couleur, border: `1px dashed ${couleur}`, borderRadius: '8px', padding: '10px', fontSize: '13px', cursor: 'pointer', fontWeight: '500' }}>
+        + Ajouter un {label.toLowerCase()}
+      </button>
+    </div>
+  )
+}
+
 export default function SaisieDonnees() {
   const [situation, setSituation] = useState('seul')
   const [personnesCharge, setPersonnesCharge] = useState('0')
@@ -40,10 +174,10 @@ export default function SaisieDonnees() {
         const d = data[0]
         if (d.situation) setSituation(d.situation)
         if (d.personnes_charge) setPersonnesCharge(d.personnes_charge)
-        setRevenus1({ salaire: d.salaire || '', fonciers: d.revenus_fonciers || '', autres: d.autres_revenus || '' })
-        setRevenus2({ salaire: d.salaire2 || '', fonciers: d.revenus_fonciers2 || '', autres: d.autres_revenus2 || '' })
-        setDepenses1({ logement: d.logement || '', alimentation: d.alimentation || '', transports: d.transports || '', loisirs: d.loisirs || '', sante: d.sante || '', autres: d.autres_depenses || '' })
-        setDepenses2({ logement: d.logement2 || '', alimentation: d.alimentation2 || '', transports: d.transports2 || '', loisirs: d.loisirs2 || '', sante: d.sante2 || '', autres: d.autres_depenses2 || '' })
+        setRevenus1({ salaire: String(d.salaire || ''), fonciers: String(d.revenus_fonciers || ''), autres: String(d.autres_revenus || '') })
+        setRevenus2({ salaire: String(d.salaire2 || ''), fonciers: String(d.revenus_fonciers2 || ''), autres: String(d.autres_revenus2 || '') })
+        setDepenses1({ logement: String(d.logement || ''), alimentation: String(d.alimentation || ''), transports: String(d.transports || ''), loisirs: String(d.loisirs || ''), sante: String(d.sante || ''), autres: String(d.autres_depenses || '') })
+        setDepenses2({ logement: String(d.logement2 || ''), alimentation: String(d.alimentation2 || ''), transports: String(d.transports2 || ''), loisirs: String(d.loisirs2 || ''), sante: String(d.sante2 || ''), autres: String(d.autres_depenses2 || '') })
         if (d.credits_immo && d.credits_immo.length > 0) setCreditsImmo(d.credits_immo)
         if (d.credits_autre && d.credits_autre.length > 0) setCreditsAutre(d.credits_autre)
       }
@@ -91,130 +225,6 @@ export default function SaisieDonnees() {
     setLoading(false)
   }
 
-  const updateCredit = (liste, setListe, index, champ, valeur) => {
-    const copie = [...liste]
-    copie[index] = { ...copie[index], [champ]: valeur }
-    setListe(copie)
-  }
-
-  const toggleCommun = (liste, setListe, index) => {
-    const copie = [...liste]
-    copie[index] = { ...copie[index], commun: !copie[index].commun }
-    setListe(copie)
-  }
-
-  const ajouterCredit = (liste, setListe) => setListe([...liste, { ...creditVide }])
-  const supprimerCredit = (liste, setListe, index) => {
-    if (liste.length === 1) return
-    setListe(liste.filter((_, i) => i !== index))
-  }
-
-  const inputStyle = { width: '100%', border: '1px solid #d1d5db', borderRadius: '8px', padding: '10px 12px', fontSize: '14px', boxSizing: 'border-box' }
-  const labelStyle = { fontSize: '12px', color: '#6b7280', display: 'block', marginBottom: '4px' }
-  const cardStyle = { background: 'white', borderRadius: '12px', padding: '16px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', marginBottom: '16px' }
-  const titleStyle = { fontWeight: '600', color: '#374151', marginBottom: '16px', paddingBottom: '8px', borderBottom: '1px solid #e5e7eb', fontSize: '15px' }
-
-  const BlocRevenus = ({ revenus, setRevenus, label, couleur, estConjoint2 }) => (
-    <div style={cardStyle}>
-      <div style={{ ...titleStyle, color: couleur }}>{label}</div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-        <div>
-          <label style={labelStyle}>Salaire net</label>
-          <input type="number" style={inputStyle} placeholder="ex: 3000" value={revenus.salaire} onChange={e => setRevenus({ ...revenus, salaire: e.target.value })} />
-        </div>
-        <div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-            <label style={{ ...labelStyle, marginBottom: 0 }}>Revenus fonciers</label>
-            {estConjoint2 && (
-              <button onClick={diviserFonciers} style={{ fontSize: '11px', color: '#7c3aed', background: '#f5f3ff', border: '1px solid #7c3aed', borderRadius: '6px', padding: '3px 8px', cursor: 'pointer' }}>
-                Diviser en 2 (commun)
-              </button>
-            )}
-          </div>
-          <input type="number" style={inputStyle} placeholder="ex: 500" value={revenus.fonciers} onChange={e => setRevenus({ ...revenus, fonciers: e.target.value })} />
-        </div>
-        <div>
-          <label style={labelStyle}>Autres revenus</label>
-          <input type="number" style={inputStyle} placeholder="ex: 200" value={revenus.autres} onChange={e => setRevenus({ ...revenus, autres: e.target.value })} />
-        </div>
-        <div style={{ background: '#eff6ff', borderRadius: '8px', padding: '12px' }}>
-          <div style={{ fontSize: '12px', color: '#2563eb' }}>Total revenus</div>
-          <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#1d4ed8' }}>
-            {Math.round(Object.values(revenus).reduce((a, b) => a + (parseFloat(b) || 0), 0)).toLocaleString()} EUR
-          </div>
-        </div>
-      </div>
-    </div>
-  )
-
-  const BlocDepenses = ({ depenses, setDepenses, label, couleur }) => (
-    <div style={cardStyle}>
-      <div style={{ ...titleStyle, color: couleur }}>{label}</div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-        {[
-          { key: 'logement', label: 'Logement', placeholder: '1050' },
-          { key: 'alimentation', label: 'Alimentation', placeholder: '600' },
-          { key: 'transports', label: 'Transports', placeholder: '450' },
-          { key: 'loisirs', label: 'Loisirs', placeholder: '300' },
-          { key: 'sante', label: 'Sante', placeholder: '300' },
-          { key: 'autres', label: 'Autres', placeholder: '300' },
-        ].map(item => (
-          <div key={item.key}>
-            <label style={labelStyle}>{item.label}</label>
-            <input type="number" style={inputStyle} placeholder={item.placeholder} value={depenses[item.key]} onChange={e => setDepenses({ ...depenses, [item.key]: e.target.value })} />
-          </div>
-        ))}
-        <div style={{ background: '#fef2f2', borderRadius: '8px', padding: '12px' }}>
-          <div style={{ fontSize: '12px', color: '#dc2626' }}>Total depenses</div>
-          <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#b91c1c' }}>
-            {Math.round(Object.values(depenses).reduce((a, b) => a + (parseFloat(b) || 0), 0)).toLocaleString()} EUR
-          </div>
-        </div>
-      </div>
-    </div>
-  )
-
-  const BlocCredits = ({ liste, setListe, couleur, emoji, label }) => (
-    <div style={{ marginBottom: '16px' }}>
-      <div style={{ fontWeight: '600', color: couleur, fontSize: '13px', marginBottom: '10px' }}>{emoji} {label}</div>
-      {liste.map((c, i) => (
-        <div key={i} style={{ background: '#f9fafb', borderRadius: '10px', padding: '12px', marginBottom: '10px', border: '1px solid #e5e7eb' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-            <span style={{ fontSize: '13px', fontWeight: '500', color: '#374151' }}>{label} {liste.length > 1 ? `#${i + 1}` : ''}</span>
-            {liste.length > 1 && (
-              <button onClick={() => supprimerCredit(liste, setListe, i)} style={{ background: '#fee2e2', color: '#b91c1c', border: 'none', borderRadius: '6px', padding: '4px 8px', fontSize: '12px', cursor: 'pointer' }}>
-                Supprimer
-              </button>
-            )}
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-            <div>
-              <label style={labelStyle}>Mensualite (EUR)</label>
-              <input type="number" style={inputStyle} placeholder="ex: 800" value={c.mensualite} onChange={e => updateCredit(liste, setListe, i, 'mensualite', e.target.value)} />
-            </div>
-            <div>
-              <label style={labelStyle}>Duree restante (mois)</label>
-              <input type="number" style={inputStyle} placeholder="ex: 240" value={c.duree} onChange={e => updateCredit(liste, setListe, i, 'duree', e.target.value)} />
-            </div>
-            <div>
-              <label style={labelStyle}>Capital restant du (EUR)</label>
-              <input type="number" style={inputStyle} placeholder="ex: 150000" value={c.capital} onChange={e => updateCredit(liste, setListe, i, 'capital', e.target.value)} />
-            </div>
-            {situation === 'foyer' && (
-              <label style={{ fontSize: '12px', color: '#6b7280', display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
-                <input type="checkbox" checked={c.commun || false} onChange={() => toggleCommun(liste, setListe, i)} />
-                Credit commun aux deux conjoints
-              </label>
-            )}
-          </div>
-        </div>
-      ))}
-      <button onClick={() => ajouterCredit(liste, setListe)} style={{ width: '100%', background: 'white', color: couleur, border: `1px dashed ${couleur}`, borderRadius: '8px', padding: '10px', fontSize: '13px', cursor: 'pointer', fontWeight: '500' }}>
-        + Ajouter un {label.toLowerCase()}
-      </button>
-    </div>
-  )
-
   return (
     <div style={{ padding: '16px', maxWidth: '700px', margin: '0 auto' }}>
       <h2 style={{ fontSize: '20px', fontWeight: 'bold', color: '#1f2937', marginBottom: '16px' }}>Saisie des donnees</h2>
@@ -253,11 +263,11 @@ export default function SaisieDonnees() {
 
       {situation === 'foyer' ? (
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-          <BlocRevenus revenus={revenus1} setRevenus={setRevenus1} label="💼 Revenus Conjoint 1" couleur="#2563eb" estConjoint2={false} />
-          <BlocRevenus revenus={revenus2} setRevenus={setRevenus2} label="💼 Revenus Conjoint 2" couleur="#7c3aed" estConjoint2={true} />
+          <BlocRevenus revenus={revenus1} setRevenus={setRevenus1} label="💼 Revenus Conjoint 1" couleur="#2563eb" estConjoint2={false} onDiviser={diviserFonciers} />
+          <BlocRevenus revenus={revenus2} setRevenus={setRevenus2} label="💼 Revenus Conjoint 2" couleur="#7c3aed" estConjoint2={true} onDiviser={diviserFonciers} />
         </div>
       ) : (
-        <BlocRevenus revenus={revenus1} setRevenus={setRevenus1} label="Revenus mensuels" couleur="#374151" estConjoint2={false} />
+        <BlocRevenus revenus={revenus1} setRevenus={setRevenus1} label="Revenus mensuels" couleur="#374151" estConjoint2={false} onDiviser={diviserFonciers} />
       )}
 
       {situation === 'foyer' ? (
@@ -271,9 +281,9 @@ export default function SaisieDonnees() {
 
       <div style={cardStyle}>
         <div style={titleStyle}>Credits en cours</div>
-        <BlocCredits liste={creditsImmo} setListe={setCreditsImmo} couleur="#2563eb" emoji="🏠" label="Credit immobilier" />
+        <BlocCredits liste={creditsImmo} setListe={setCreditsImmo} couleur="#2563eb" emoji="🏠" label="Credit immobilier" situation={situation} />
         <div style={{ borderTop: '1px solid #e5e7eb', paddingTop: '16px' }}>
-          <BlocCredits liste={creditsAutre} setListe={setCreditsAutre} couleur="#7c3aed" emoji="💳" label="Autre credit" />
+          <BlocCredits liste={creditsAutre} setListe={setCreditsAutre} couleur="#7c3aed" emoji="💳" label="Autre credit" situation={situation} />
         </div>
         <div style={{ background: '#f5f3ff', borderRadius: '8px', padding: '12px', marginTop: '8px' }}>
           <div style={{ fontSize: '12px', color: '#7c3aed' }}>Total mensualites credits</div>

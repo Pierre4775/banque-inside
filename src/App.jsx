@@ -51,31 +51,73 @@ const S = {
   muted: { fontSize:'12px', color:'#9ca3af' },
 }
 
-function DashboardPage({ profil }) {
+function DashboardPage({ profil, vueMode, setVueMode }) {
   if (!profil) return <div style={{padding:'24px', color:'#6b7280'}}>Chargement...</div>
 
-  const totalRevenus = Math.round((profil.salaire || 0) + (profil.revenus_fonciers || 0) + (profil.autres_revenus || 0))
-  const totalDepenses = Math.round(
-    (profil.logement || 0) + (profil.alimentation || 0) + (profil.transports || 0) +
-    (profil.loisirs || 0) + (profil.sante || 0) + (profil.autres_depenses || 0)
-  )
+  const estFoyer = profil.situation === 'foyer'
+
+  // Revenus selon le mode (revenus fonciers déjà divisés par 2 si commun dans saisie)
+  const revenus1 = Math.round((profil.salaire || 0) + (profil.revenus_fonciers || 0) + (profil.autres_revenus || 0))
+  const revenus2 = Math.round((profil.salaire2 || 0) + (profil.revenus_fonciers2 || 0) + (profil.autres_revenus2 || 0))
+  const totalRevenus = vueMode === 'foyer' ? revenus1 + revenus2 : revenus1
+
+  // Depenses selon le mode
+  const depenses1 = Math.round((profil.logement || 0) + (profil.alimentation || 0) + (profil.transports || 0) + (profil.loisirs || 0) + (profil.sante || 0) + (profil.autres_depenses || 0))
+  const depenses2 = Math.round((profil.logement2 || 0) + (profil.alimentation2 || 0) + (profil.transports2 || 0) + (profil.loisirs2 || 0) + (profil.sante2 || 0) + (profil.autres_depenses2 || 0))
+  const totalDepenses = vueMode === 'foyer' ? depenses1 + depenses2 : depenses1
+
+  // Credits — mensualité entière même si commun
   const creditsImmo = profil.credits_immo || []
   const creditsAutre = profil.credits_autre || []
-  const totalMensualites = Math.round([...creditsImmo, ...creditsAutre].reduce((a, c) => a + (parseFloat(c.mensualite) || 0), 0))
+  const totalMensualites = Math.round([...creditsImmo, ...creditsAutre].reduce((a, c) => {
+    return a + (parseFloat(c.mensualite) || 0)
+  }, 0))
+
+  // Loyer pour taux endettement
+  const loyer = vueMode === 'foyer'
+    ? Math.round((profil.logement || 0) + (profil.logement2 || 0))
+    : Math.round(profil.logement || 0)
+
+  // Charges totales pour taux endettement = crédits + loyer
+  const chargesEndettement = totalMensualites + loyer
+
+  // Taux endettement bancaire réel
+  const tauxEndettement = totalRevenus > 0 ? Math.round((chargesEndettement / totalRevenus) * 100) : 0
+
+  // Reste à vivre = revenus - crédits - loyer
+  const resteAVivre = totalRevenus - chargesEndettement
+
+  // Epargne disponible = revenus - toutes dépenses - crédits
   const epargne = totalRevenus - totalDepenses - totalMensualites
   const tauxEpargne = totalRevenus > 0 ? Math.round((epargne / totalRevenus) * 100) : 0
-  const tauxEndettement = totalRevenus > 0 ? Math.round((totalMensualites / totalRevenus) * 100) : 0
+
   const score = Math.min(100, Math.max(0, Math.round(50 + tauxEpargne - tauxEndettement)))
   const capaciteEmprunt = Math.round(totalRevenus * 0.33 * 12 * 20)
   const mensualiteMax = Math.round(totalRevenus * 0.33)
 
+  const depensesBase = vueMode === 'foyer' ? {
+    logement: (profil.logement || 0) + (profil.logement2 || 0),
+    alimentation: (profil.alimentation || 0) + (profil.alimentation2 || 0),
+    transports: (profil.transports || 0) + (profil.transports2 || 0),
+    loisirs: (profil.loisirs || 0) + (profil.loisirs2 || 0),
+    sante: (profil.sante || 0) + (profil.sante2 || 0),
+    autres: (profil.autres_depenses || 0) + (profil.autres_depenses2 || 0),
+  } : {
+    logement: profil.logement || 0,
+    alimentation: profil.alimentation || 0,
+    transports: profil.transports || 0,
+    loisirs: profil.loisirs || 0,
+    sante: profil.sante || 0,
+    autres: profil.autres_depenses || 0,
+  }
+
   const depensesData = [
-    { name: 'Logement', value: profil.logement || 0, color: '#1e3a5f' },
-    { name: 'Alimentation', value: profil.alimentation || 0, color: '#2563eb' },
-    { name: 'Transports', value: profil.transports || 0, color: '#16a34a' },
-    { name: 'Loisirs', value: profil.loisirs || 0, color: '#ca8a04' },
-    { name: 'Sante', value: profil.sante || 0, color: '#dc2626' },
-    { name: 'Autres', value: profil.autres_depenses || 0, color: '#9ca3af' },
+    { name: 'Logement', value: depensesBase.logement, color: '#1e3a5f' },
+    { name: 'Alimentation', value: depensesBase.alimentation, color: '#2563eb' },
+    { name: 'Transports', value: depensesBase.transports, color: '#16a34a' },
+    { name: 'Loisirs', value: depensesBase.loisirs, color: '#ca8a04' },
+    { name: 'Sante', value: depensesBase.sante, color: '#dc2626' },
+    { name: 'Autres', value: depensesBase.autres, color: '#9ca3af' },
   ].filter(d => d.value > 0)
 
   const patrimoine = [
@@ -90,6 +132,25 @@ function DashboardPage({ profil }) {
 
   return (
     <div style={S.page}>
+
+      {estFoyer && (
+        <div style={{display:'flex', gap:'12px', alignItems:'center'}}>
+          <span style={{fontSize:'14px', color:'#6b7280', fontWeight:'500'}}>Vue :</span>
+          {['personnel', 'foyer'].map(mode => (
+            <button key={mode} onClick={() => setVueMode(mode)} style={{
+              padding:'8px 16px', borderRadius:'8px', border: vueMode === mode ? '2px solid #2563eb' : '1px solid #d1d5db',
+              background: vueMode === mode ? '#eff6ff' : 'white', color: vueMode === mode ? '#2563eb' : '#374151',
+              fontWeight: vueMode === mode ? '600' : '400', cursor:'pointer', fontSize:'14px'
+            }}>
+              {mode === 'personnel' ? '👤 Personnel' : '👨‍👩‍👧 Foyer'}
+            </button>
+          ))}
+          <span style={{fontSize:'12px', color:'#9ca3af'}}>
+            {vueMode === 'foyer' ? 'Donnees combinees des deux conjoints' : 'Donnees du Conjoint 1 uniquement'}
+          </span>
+        </div>
+      )}
+
       <div style={S.grid4}>
         <div style={S.card}>
           <div style={S.cardTitle}>Score financier global</div>
@@ -109,7 +170,7 @@ function DashboardPage({ profil }) {
         </div>
 
         <div style={S.card}>
-          <div style={S.cardTitle}>Epargne mensuelle</div>
+          <div style={S.cardTitle}>Epargne mensuelle {vueMode === 'foyer' ? '(foyer)' : '(personnel)'}</div>
           <div style={S.bigNum}>{epargne.toLocaleString()} EUR</div>
           <div style={{...S.green, color: tauxEpargne >= 15 ? '#22c55e' : '#f59e0b'}}>{tauxEpargne}%</div>
           <div style={S.muted}>Taux epargne</div>
@@ -120,7 +181,10 @@ function DashboardPage({ profil }) {
           <div style={S.cardTitle}>Taux endettement</div>
           <div style={S.bigNum}>{tauxEndettement}%</div>
           <div style={{...S.green, color: tauxEndettement <= 33 ? '#22c55e' : '#ef4444'}}>{tauxEndettement <= 33 ? 'OK' : 'Eleve'}</div>
-          <div style={{marginTop:'12px', height:'12px', borderRadius:'9999px', overflow:'hidden', display:'flex'}}>
+          <div style={{fontSize:'11px', color:'#6b7280', marginTop:'4px'}}>
+            Credits : {totalMensualites.toLocaleString()} EUR + Loyer : {loyer.toLocaleString()} EUR
+          </div>
+          <div style={{marginTop:'8px', height:'12px', borderRadius:'9999px', overflow:'hidden', display:'flex'}}>
             <div style={{background:'#22c55e', flex:1}}/>
             <div style={{background:'#facc15', width:'16%'}}/>
             <div style={{background:'#ef4444', width:'25%'}}/>
@@ -128,10 +192,14 @@ function DashboardPage({ profil }) {
           <div style={{display:'flex', justifyContent:'space-between', fontSize:'11px', color:'#9ca3af', marginTop:'4px'}}>
             <span>0%</span><span>33%</span><span>50%</span><span>100%</span>
           </div>
+          <div style={{marginTop:'12px', padding:'8px', background: resteAVivre >= 0 ? '#f0fdf4' : '#fef2f2', borderRadius:'8px'}}>
+            <div style={{fontSize:'11px', color:'#6b7280'}}>Reste a vivre</div>
+            <div style={{fontSize:'18px', fontWeight:'bold', color: resteAVivre >= 0 ? '#15803d' : '#b91c1c'}}>{resteAVivre.toLocaleString()} EUR</div>
+          </div>
         </div>
 
         <div style={S.card}>
-          <div style={S.cardTitle}>Revenus / Depenses</div>
+          <div style={S.cardTitle}>Revenus / Depenses {vueMode === 'foyer' ? '(foyer)' : '(personnel)'}</div>
           <div style={{fontSize:'14px', color:'#6b7280', marginBottom:'4px'}}>Revenus</div>
           <div style={{fontSize:'22px', fontWeight:'bold', color:'#1d4ed8'}}>{totalRevenus.toLocaleString()} EUR</div>
           <div style={{fontSize:'14px', color:'#6b7280', marginTop:'8px', marginBottom:'4px'}}>Depenses</div>
@@ -200,6 +268,7 @@ export default function App() {
   const [menuOpen, setMenuOpen] = useState(false)
   const [user, setUser] = useState(null)
   const [profil, setProfil] = useState(null)
+  const [vueMode, setVueMode] = useState('personnel')
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -223,7 +292,10 @@ export default function App() {
       .eq('user_id', userId)
       .order('created_at', { ascending: false })
       .limit(1)
-    if (data && data.length > 0) setProfil(data[0])
+    if (data && data.length > 0) {
+      setProfil(data[0])
+      setVueMode(data[0].situation === 'foyer' ? 'foyer' : 'personnel')
+    }
   }
 
   const deconnecter = async () => {
@@ -238,7 +310,7 @@ export default function App() {
       case 'Patrimoine net': return <PatrimoineNet/>
       case 'Simulations': return <Simulations/>
       case 'Alertes': return <Alertes/>
-      default: return <DashboardPage profil={profil}/>
+      default: return <DashboardPage profil={profil} vueMode={vueMode} setVueMode={setVueMode}/>
     }
   }
 
