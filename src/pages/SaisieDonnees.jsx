@@ -305,24 +305,25 @@ export default function SaisieDonnees() {
         const d = data[0]
         if (d.situation) setSituation(d.situation)
         if (d.personnes_charge) setPersonnesCharge(d.personnes_charge)
-        setRevenus1({ salaire: String(d.salaire || ''), fonciers: String(d.revenus_fonciers || ''), autres: String(d.autres_revenus || '') })
-        setRevenus2({ salaire: String(d.salaire2 || ''), fonciers: String(d.revenus_fonciers2 || ''), autres: String(d.autres_revenus2 || '') })
+        const s = (v) => v != null ? String(v) : ''
+        setRevenus1({ salaire: s(d.salaire), fonciers: s(d.revenus_fonciers), autres: s(d.autres_revenus) })
+        setRevenus2({ salaire: s(d.salaire2), fonciers: s(d.revenus_fonciers2), autres: s(d.autres_revenus2) })
         setDepenses1({
-          logement: String(d.logement || ''), alimentation: String(d.alimentation || ''), transports: String(d.transports || ''),
-          loisirs: String(d.loisirs || ''), sante: String(d.sante || ''), autres: String(d.autres_depenses || ''),
-          assurance_auto: String(d.assurance_auto || ''), assurance_habitation: String(d.assurance_habitation || ''), assurance_sante: String(d.assurance_sante || ''),
-          telephonie: String(d.telephonie || ''), internet: String(d.internet || ''), streaming: String(d.streaming || ''),
-          electricite: String(d.electricite || ''), gaz: String(d.gaz || ''),
+          logement: s(d.logement), alimentation: s(d.alimentation), transports: s(d.transports),
+          loisirs: s(d.loisirs), sante: s(d.sante), autres: s(d.autres_depenses),
+          assurance_auto: s(d.assurance_auto), assurance_habitation: s(d.assurance_habitation), assurance_sante: s(d.assurance_sante),
+          telephonie: s(d.telephonie), internet: s(d.internet), streaming: s(d.streaming),
+          electricite: s(d.electricite), gaz: s(d.gaz),
         })
         setDepenses2({
-          logement: String(d.logement2 || ''), alimentation: String(d.alimentation2 || ''), transports: String(d.transports2 || ''),
-          loisirs: String(d.loisirs2 || ''), sante: String(d.sante2 || ''), autres: String(d.autres_depenses2 || ''),
-          assurance_auto: String(d.assurance_auto2 || ''), assurance_habitation: String(d.assurance_habitation2 || ''), assurance_sante: String(d.assurance_sante2 || ''),
-          telephonie: String(d.telephonie2 || ''), internet: String(d.internet2 || ''), streaming: String(d.streaming2 || ''),
-          electricite: String(d.electricite2 || ''), gaz: String(d.gaz2 || ''),
+          logement: s(d.logement2), alimentation: s(d.alimentation2), transports: s(d.transports2),
+          loisirs: s(d.loisirs2), sante: s(d.sante2), autres: s(d.autres_depenses2),
+          assurance_auto: s(d.assurance_auto2), assurance_habitation: s(d.assurance_habitation2), assurance_sante: s(d.assurance_sante2),
+          telephonie: s(d.telephonie2), internet: s(d.internet2), streaming: s(d.streaming2),
+          electricite: s(d.electricite2), gaz: s(d.gaz2),
         })
-        setImpots1({ impots: String(d.impots || '') })
-        setImpots2({ impots: String(d.impots2 || '') })
+        setImpots1({ impots: s(d.impots) })
+        setImpots2({ impots: s(d.impots2) })
         if (d.credits_immo && d.credits_immo.length > 0) setCreditsImmo(d.credits_immo)
         if (d.credits_autre && d.credits_autre.length > 0) setCreditsAutre(d.credits_autre)
       }

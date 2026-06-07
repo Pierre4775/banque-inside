@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { PieChart, Pie, Cell, LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts'
 import SaisieDonnees from './pages/SaisieDonnees'
 import AnalyseBancaire from './pages/AnalyseBancaire'
@@ -14,7 +14,7 @@ import jsPDF from 'jspdf'
 function useCountUp(target, duration = 400) {
   const [value, setValue] = useState(0)
   useEffect(() => {
-    if (!target) return
+    if (target == null) return
     const start = Date.now()
     const timer = setInterval(() => {
       const elapsed = Date.now() - start
@@ -603,11 +603,25 @@ function StatCard({ title, children, accent }) {
   )
 }
 
-function DashboardPage({ profil, vueMode, setVueMode, dureeEmprunt, setDureeEmprunt }) {
+function DashboardPage({ profil, profilCharge, vueMode, setVueMode, dureeEmprunt, setDureeEmprunt }) {
   if (!profil) return (
     <div style={{ padding: '48px', textAlign: 'center', color: COLORS.gray400 }}>
-      <div style={{ fontSize: '32px', marginBottom: '12px' }}>⟳</div>
-      <div>Chargement de votre profil...</div>
+      {profilCharge ? (
+        <>
+          <div style={{ fontSize: '48px', marginBottom: '16px' }}>📊</div>
+          <div style={{ fontSize: '18px', fontWeight: '700', color: COLORS.navy, marginBottom: '8px' }}>
+            Bienvenue sur Banque Inside
+          </div>
+          <div style={{ fontSize: '14px', color: COLORS.gray400, maxWidth: '320px', margin: '0 auto', lineHeight: '1.6' }}>
+            Commencez par saisir vos revenus et dépenses dans <strong>Saisie des données</strong> pour obtenir votre analyse financière.
+          </div>
+        </>
+      ) : (
+        <>
+          <div style={{ fontSize: '32px', marginBottom: '12px' }}>⟳</div>
+          <div>Chargement de votre profil...</div>
+        </>
+      )}
     </div>
   )
 
@@ -923,23 +937,41 @@ export default function App() {
   const [menuOpen, setMenuOpen] = useState(false)
   const [user, setUser] = useState(null)
   const [profil, setProfil] = useState(null)
+  const [profilCharge, setProfilCharge] = useState(false)
   const [vueMode, setVueMode] = useState('personnel')
   const [dureeEmprunt, setDureeEmprunt] = useState(20)
+  const [mountedPages, setMountedPages] = useState(new Set())
+  const prevSituationRef = useRef(null)
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null)
       if (session?.user) chargerProfil(session.user.id)
+      else setProfilCharge(true)
     })
-    supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null)
       if (session?.user) chargerProfil(session.user.id)
     })
+    return () => listener.subscription.unsubscribe()
   }, [])
 
   useEffect(() => {
     if (user && active === 'Dashboard') chargerProfil(user.id)
+  }, [active, user])
+
+  useEffect(() => {
+    if (active === 'Saisie donnees' || active === 'Patrimoine net') {
+      setMountedPages(prev => new Set([...prev, active]))
+    }
   }, [active])
+
+  useEffect(() => {
+    if (profil && profil.situation !== prevSituationRef.current) {
+      setVueMode(profil.situation === 'foyer' ? 'foyer' : 'personnel')
+      prevSituationRef.current = profil.situation
+    }
+  }, [profil])
 
   const chargerProfil = async (userId) => {
     const { data } = await supabase
@@ -948,10 +980,8 @@ export default function App() {
       .eq('user_id', userId)
       .order('created_at', { ascending: false })
       .limit(1)
-    if (data && data.length > 0) {
-      setProfil(data[0])
-      setVueMode(data[0].situation === 'foyer' ? 'foyer' : 'personnel')
-    }
+    if (data && data.length > 0) setProfil(data[0])
+    setProfilCharge(true)
   }
 
   const deconnecter = async () => {
@@ -961,15 +991,15 @@ export default function App() {
 
   const renderPage = () => {
     const pages = {
-      'Saisie donnees': <SaisieDonnees />,
       'Analyse bancaire': <AnalyseBancaire />,
-      'Patrimoine net': <PatrimoineNet />,
       'Simulations': <Simulations />,
       'Alertes': <Alertes />,
       'Recommandations': <Recommandations />,
       'Guide utilisation': <GuideUtilisation />,
     }
-    return pages[active] || <DashboardPage profil={profil} vueMode={vueMode} setVueMode={setVueMode} dureeEmprunt={dureeEmprunt} setDureeEmprunt={setDureeEmprunt} />
+    if (pages[active]) return pages[active]
+    if (active === 'Saisie donnees' || active === 'Patrimoine net') return null
+    return <DashboardPage profil={profil} profilCharge={profilCharge} vueMode={vueMode} setVueMode={setVueMode} dureeEmprunt={dureeEmprunt} setDureeEmprunt={setDureeEmprunt} />
   }
 
   if (!user) return <Login onLogin={() => supabase.auth.getSession().then(({ data: { session } }) => setUser(session?.user))} />
@@ -1052,6 +1082,16 @@ export default function App() {
         </div>
         <div style={{ flex: 1 }}>
           {renderPage()}
+          {mountedPages.has('Saisie donnees') && (
+            <div style={{ display: active === 'Saisie donnees' ? 'block' : 'none' }}>
+              <SaisieDonnees />
+            </div>
+          )}
+          {mountedPages.has('Patrimoine net') && (
+            <div style={{ display: active === 'Patrimoine net' ? 'block' : 'none' }}>
+              <PatrimoineNet isActive={active === 'Patrimoine net'} />
+            </div>
+          )}
         </div>
       </div>
     </div>

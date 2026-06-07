@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { supabase } from '../supabase'
 
 const COLORS = {
@@ -49,7 +49,7 @@ const cardStyle = {
   boxShadow: '0 1px 4px rgba(15,39,68,0.08)', marginBottom: '16px',
 }
 
-export default function PatrimoineNet() {
+export default function PatrimoineNet({ isActive }) {
   const [epargneCourt, setEpargneCourt] = useState([{ ...epargneVide }])
   const [epargneMoyen, setEpargneMoyen] = useState([{ ...epargneVide }])
   const [epargneLong, setEpargneLong] = useState([{ ...epargneVide }])
@@ -59,49 +59,57 @@ export default function PatrimoineNet() {
   const [vueMode, setVueMode] = useState('personnel')
   const [message, setMessage] = useState('')
   const [loading, setLoading] = useState(false)
+  const [profilExiste, setProfilExiste] = useState(null)
+  const hasLoadedData = useRef(false)
 
-  useEffect(() => {
-    const charger = async () => {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) return
-      const { data } = await supabase
-        .from('profils_financiers')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false })
-        .limit(1)
-      if (data && data.length > 0) {
-        const d = data[0]
-        if (d.situation) {
-          setSituation(d.situation)
+  const charger = async () => {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return
+    const { data } = await supabase
+      .from('profils_financiers')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false })
+      .limit(1)
+    if (data && data.length > 0) {
+      const d = data[0]
+      setProfilExiste(true)
+      if (d.situation) {
+        setSituation(d.situation)
+        if (!hasLoadedData.current) {
           setVueMode(d.situation === 'foyer' ? 'commun' : 'personnel')
         }
+      }
+      // Recharge toujours les crédits (viennent de SaisieDonnees)
+      if (d.credits_immo && d.credits_immo.length > 0) setCreditsImmo(d.credits_immo)
+      // Charge les données de formulaire uniquement au premier chargement
+      if (!hasLoadedData.current) {
         if (d.epargne_court && d.epargne_court.length > 0) setEpargneCourt(d.epargne_court)
         if (d.epargne_moyen && d.epargne_moyen.length > 0) setEpargneMoyen(d.epargne_moyen)
         if (d.epargne_long && d.epargne_long.length > 0) setEpargneLong(d.epargne_long)
         if (d.biens_immo && d.biens_immo.length > 0) setBiens(d.biens_immo)
-        if (d.credits_immo && d.credits_immo.length > 0) setCreditsImmo(d.credits_immo)
+        hasLoadedData.current = true
       }
+    } else {
+      setProfilExiste(false)
     }
-    charger()
-  }, [])
+  }
+
+  useEffect(() => {
+    if (isActive) charger()
+  }, [isActive])
 
   const sauvegarder = async () => {
-    setLoading(true)
-    const { data: { user } } = await supabase.auth.getUser()
-    const { data: existing } = await supabase.from('profils_financiers').select('id').eq('user_id', user.id).limit(1)
-    let error
-    if (existing && existing.length > 0) {
-      const { error: updateError } = await supabase.from('profils_financiers').update({
-        epargne_court: epargneCourt, epargne_moyen: epargneMoyen,
-        epargne_long: epargneLong, biens_immo: biens,
-      }).eq('user_id', user.id)
-      error = updateError
-    } else {
-      setMessage("Erreur : veuillez d'abord remplir la page Saisie de données")
-      setLoading(false)
+    if (profilExiste === false) {
+      setMessage("Veuillez d'abord saisir vos revenus et dépenses dans la page Saisie des données.")
       return
     }
+    setLoading(true)
+    const { data: { user } } = await supabase.auth.getUser()
+    const { error } = await supabase.from('profils_financiers').update({
+      epargne_court: epargneCourt, epargne_moyen: epargneMoyen,
+      epargne_long: epargneLong, biens_immo: biens,
+    }).eq('user_id', user.id)
     if (error) setMessage('Erreur : ' + error.message)
     else setMessage('Patrimoine sauvegardé !')
     setLoading(false)
@@ -224,6 +232,18 @@ export default function PatrimoineNet() {
           </div>
         )}
       </div>
+
+      {/* BANNIÈRE NOUVEAU COMPTE */}
+      {profilExiste === false && (
+        <div style={{
+          padding: '14px 16px', borderRadius: '10px', marginBottom: '16px',
+          background: COLORS.amberLight, color: COLORS.amber,
+          border: `1px solid #fcd34d`, fontSize: '13px', fontWeight: '500',
+          borderLeft: `4px solid ${COLORS.amber}`,
+        }}>
+          ⚠️ <strong>Aucun profil financier trouvé.</strong> Renseignez d'abord vos revenus et dépenses dans la page <strong>Saisie des données</strong> avant de sauvegarder votre patrimoine.
+        </div>
+      )}
 
       {/* MESSAGE */}
       {message && (
