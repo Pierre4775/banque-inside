@@ -853,36 +853,59 @@ function DashboardPage({ profil, profilCharge, vueMode, setVueMode, dureeEmprunt
         </StatCard>
 
         <StatCard title={`Revenus · Dépenses ${vueMode === 'foyer' ? '· Foyer' : ''}`} accent={COLORS.navy}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 12px', background: COLORS.bluePale, borderRadius: '10px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            {/* Revenus avant impôts */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 12px', background: COLORS.bluePale, border: '1px solid #bfdbfe', borderRadius: '10px' }}>
               <div>
-                <div style={{ fontSize: '11px', color: COLORS.blue, fontWeight: '600' }}>REVENUS BRUTS</div>
+                <div style={{ fontSize: '11px', color: COLORS.blue, fontWeight: '700', letterSpacing: '0.04em' }}>REVENUS AVANT IMPÔTS</div>
                 <div style={{ fontSize: '20px', fontWeight: '800', color: COLORS.navy }}>
-                  <AnimatedNumber value={totalRevenus} /> <span style={{ fontSize: '12px', fontWeight: '400' }}>EUR</span>
+                  <AnimatedNumber value={totalRevenus} /> <span style={{ fontSize: '12px', fontWeight: '400', color: COLORS.gray400 }}>EUR</span>
                 </div>
               </div>
-              <div style={{ fontSize: '24px' }}>↑</div>
+              <div style={{ fontSize: '20px', color: COLORS.blue }}>↑</div>
             </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 12px', background: COLORS.redLight, borderRadius: '10px' }}>
+            {/* Dépenses mensuelles courantes */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 12px', background: COLORS.redLight, border: '1px solid #fca5a5', borderRadius: '10px' }}>
               <div>
-                <div style={{ fontSize: '11px', color: COLORS.red, fontWeight: '600' }}>DÉPENSES TOTALES</div>
-                <div style={{ fontSize: '20px', fontWeight: '800', color: COLORS.navy }}>
-                  <AnimatedNumber value={totalDepenses + totalImpots} /> <span style={{ fontSize: '12px', fontWeight: '400' }}>EUR</span>
+                <div style={{ fontSize: '11px', color: COLORS.red, fontWeight: '700', letterSpacing: '0.04em' }}>DÉPENSES MENSUELLES</div>
+                <div style={{ fontSize: '18px', fontWeight: '700', color: COLORS.navy }}>
+                  <AnimatedNumber value={totalDepenses} /> <span style={{ fontSize: '12px', fontWeight: '400', color: COLORS.gray400 }}>EUR</span>
                 </div>
               </div>
-              <div style={{ fontSize: '24px' }}>↓</div>
+              <div style={{ fontSize: '16px', color: COLORS.red }}>↓</div>
             </div>
+            {/* Dont impôts */}
             {totalImpots > 0 && (
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 12px', background: COLORS.purpleLight, borderRadius: '10px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 12px', background: COLORS.purpleLight, border: '1px solid #e9d5ff', borderRadius: '10px' }}>
                 <div>
-                  <div style={{ fontSize: '11px', color: COLORS.purple, fontWeight: '600' }}>DONT IMPÔTS</div>
-                  <div style={{ fontSize: '16px', fontWeight: '700', color: COLORS.navy }}>
-                    <AnimatedNumber value={totalImpots} /> <span style={{ fontSize: '12px', fontWeight: '400' }}>EUR</span>
+                  <div style={{ fontSize: '11px', color: COLORS.purple, fontWeight: '700', letterSpacing: '0.04em' }}>DONT IMPÔTS</div>
+                  <div style={{ fontSize: '18px', fontWeight: '700', color: COLORS.navy }}>
+                    <AnimatedNumber value={totalImpots} /> <span style={{ fontSize: '12px', fontWeight: '400', color: COLORS.gray400 }}>EUR</span>
                   </div>
                 </div>
-                <div style={{ fontSize: '18px' }}>🏛</div>
+                <div style={{ fontSize: '16px' }}>🏛</div>
               </div>
             )}
+            {/* Mensualités crédits */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 12px', background: COLORS.amberLight, border: '1px solid #fcd34d', borderRadius: '10px' }}>
+              <div>
+                <div style={{ fontSize: '11px', color: COLORS.amber, fontWeight: '700', letterSpacing: '0.04em' }}>MENSUALITÉS CRÉDITS</div>
+                <div style={{ fontSize: '18px', fontWeight: '700', color: COLORS.navy }}>
+                  <AnimatedNumber value={totalMensualites} /> <span style={{ fontSize: '12px', fontWeight: '400', color: COLORS.gray400 }}>EUR</span>
+                </div>
+              </div>
+              <div style={{ fontSize: '16px' }}>🏦</div>
+            </div>
+            {/* Dépenses totales — tout additionné */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 12px', background: '#fca5a5', border: '1px solid #f87171', borderRadius: '10px' }}>
+              <div>
+                <div style={{ fontSize: '11px', color: '#991b1b', fontWeight: '700', letterSpacing: '0.04em' }}>DÉPENSES TOTALES</div>
+                <div style={{ fontSize: '20px', fontWeight: '800', color: '#7f1d1d' }}>
+                  <AnimatedNumber value={totalDepenses + totalMensualites + totalImpots} /> <span style={{ fontSize: '12px', fontWeight: '600', color: '#991b1b' }}>EUR</span>
+                </div>
+              </div>
+              <div style={{ fontSize: '20px', color: '#dc2626' }}>↓</div>
+            </div>
           </div>
         </StatCard>
       </div>

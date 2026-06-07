@@ -354,16 +354,14 @@ export default function SaisieDonnees() {
   const sauvegarder = async () => {
     setLoading(true)
     const { data: { user } } = await supabase.auth.getUser()
-    const { error } = await supabase.from('profils_financiers').upsert([{
+
+    const basePayload = {
       user_id: user.id,
       situation,
       personnes_charge: personnesCharge,
       salaire: parseFloat(revenus1.salaire) || 0,
       revenus_fonciers: parseFloat(revenus1.fonciers) || 0,
       autres_revenus: parseFloat(revenus1.autres) || 0,
-      salaire2: parseFloat(revenus2.salaire) || 0,
-      revenus_fonciers2: parseFloat(revenus2.fonciers) || 0,
-      autres_revenus2: parseFloat(revenus2.autres) || 0,
       logement: parseFloat(depenses1.logement) || 0,
       alimentation: parseFloat(depenses1.alimentation) || 0,
       transports: parseFloat(depenses1.transports) || 0,
@@ -379,6 +377,17 @@ export default function SaisieDonnees() {
       streaming: parseFloat(depenses1.streaming) || 0,
       electricite: parseFloat(depenses1.electricite) || 0,
       gaz: parseFloat(depenses1.gaz) || 0,
+      credits_immo: creditsImmo,
+      credits_autre: creditsAutre,
+    }
+
+    // Les champs _2 et patrimoine ne sont inclus que pour le mode foyer,
+    // pour ne pas écraser les données conjoint/patrimoine lors d'une sauvegarde en mode seul.
+    const payload = situation === 'foyer' ? {
+      ...basePayload,
+      salaire2: parseFloat(revenus2.salaire) || 0,
+      revenus_fonciers2: parseFloat(revenus2.fonciers) || 0,
+      autres_revenus2: parseFloat(revenus2.autres) || 0,
       logement2: parseFloat(depenses2.logement) || 0,
       alimentation2: parseFloat(depenses2.alimentation) || 0,
       transports2: parseFloat(depenses2.transports) || 0,
@@ -394,9 +403,9 @@ export default function SaisieDonnees() {
       streaming2: parseFloat(depenses2.streaming) || 0,
       electricite2: parseFloat(depenses2.electricite) || 0,
       gaz2: parseFloat(depenses2.gaz) || 0,
-      credits_immo: creditsImmo,
-      credits_autre: creditsAutre,
-    }], { onConflict: 'user_id' })
+    } : basePayload
+
+    const { error } = await supabase.from('profils_financiers').upsert([payload], { onConflict: 'user_id' })
     if (error) setMessage('Erreur : ' + error.message)
     else setMessage('Données sauvegardées !')
     setLoading(false)
