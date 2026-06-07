@@ -52,9 +52,9 @@ function calculerIndicateurs(profil) {
       (profil.loisirs2 || 0) + (profil.sante2 || 0) + (profil.autres_depenses2 || 0)
     ) : 0)
 
-  const creditsImmo = profil.credits_immo || []
-  const creditsAutre = profil.credits_autre || []
-  const totalMensualites = [...creditsImmo, ...creditsAutre].reduce((a, c) => a + (parseFloat(c.mensualite) || 0), 0)
+  const creditsImmo = Array.isArray(profil.credits_immo) ? profil.credits_immo : []
+  const creditsAutre = Array.isArray(profil.credits_autre) ? profil.credits_autre : []
+  const totalMensualites = [...creditsImmo, ...creditsAutre].reduce((a, c) => a + (parseFloat(c?.mensualite) || 0), 0)
 
   const loyer = (profil.logement || 0) + (estFoyer ? (profil.logement2 || 0) : 0)
   const chargesEndettement = totalMensualites + loyer
@@ -70,11 +70,11 @@ function calculerIndicateurs(profil) {
 
   const resteAVivreNet = revenusNets - chargesEndettement
 
-  const epargneCourt = (profil.epargne_court || []).reduce((a, e) => a + (parseFloat(e.montant) || 0), 0)
+  const epargneCourt = (Array.isArray(profil.epargne_court) ? profil.epargne_court : []).reduce((a, e) => a + (parseFloat(e?.montant) || 0), 0)
   const depensesMensuelles = totalDepenses + totalMensualites
   const moisFondsUrgence = depensesMensuelles > 0 ? epargneCourt / depensesMensuelles : 0
 
-  const mensualiteMax = Math.max(0, totalRevenus * 0.33 - totalMensualites)
+  const mensualiteMax = Math.max(0, totalRevenus * 0.35 - totalMensualites)
   const r = TAUX_MARCHE[20] / 100 / 12
   const capaciteEmprunt = mensualiteMax > 0 ? Math.round(mensualiteMax * (1 - Math.pow(1 + r, -240)) / r) : 0
 
@@ -232,15 +232,15 @@ export default function AnalyseBancaire() {
           <IndicateurRow
             label="Taux d'endettement (avant impôts)"
             valeur={`${ind.tauxEndettement}%`}
-            detail={ind.tauxEndettement <= 33 ? `En dessous de la limite bancaire de 33% — zone verte` : `Au-dessus de la limite bancaire de 33% — à réduire`}
-            statut={ind.tauxEndettement <= 25 ? 'bon' : ind.tauxEndettement <= 33 ? 'moyen' : 'mauvais'}
+            detail={ind.tauxEndettement <= 35 ? `En dessous de la limite bancaire de 35% — zone verte` : `Au-dessus de la limite bancaire de 35% — à réduire`}
+            statut={ind.tauxEndettement <= 25 ? 'bon' : ind.tauxEndettement <= 35 ? 'moyen' : 'mauvais'}
             showBar barVal={ind.tauxEndettement} barMax={60}
           />
           <IndicateurRow
             label="Taux d'endettement (après impôts)"
             valeur={`${ind.tauxEndettementNet}%`}
-            detail={ind.tauxEndettementNet <= 33 ? `Zone verte après déduction des impôts` : `Zone de vigilance après déduction des impôts`}
-            statut={ind.tauxEndettementNet <= 33 ? 'bon' : ind.tauxEndettementNet <= 45 ? 'moyen' : 'mauvais'}
+            detail={ind.tauxEndettementNet <= 35 ? `Zone verte après déduction des impôts` : `Zone de vigilance après déduction des impôts`}
+            statut={ind.tauxEndettementNet <= 35 ? 'bon' : ind.tauxEndettementNet <= 45 ? 'moyen' : 'mauvais'}
             showBar barVal={ind.tauxEndettementNet} barMax={70}
           />
           <IndicateurRow
@@ -292,10 +292,10 @@ export default function AnalyseBancaire() {
             <div style={{ fontSize: '11px', color: COLORS.gray400, marginBottom: '6px' }}>Mensualité disponible</div>
             <div style={{ fontSize: '22px', fontWeight: '800', color: 'white' }}>
               {ind.capaciteEmprunt > 0
-                ? `${Math.round(Math.max(0, ind.totalRevenus * 0.33 - ([...(profil.credits_immo || []), ...(profil.credits_autre || [])].reduce((a, c) => a + (parseFloat(c.mensualite) || 0), 0)))).toLocaleString()} EUR`
+                ? `${Math.round(Math.max(0, ind.totalRevenus * 0.35 - ([...(Array.isArray(profil.credits_immo) ? profil.credits_immo : []), ...(Array.isArray(profil.credits_autre) ? profil.credits_autre : [])].reduce((a, c) => a + (parseFloat(c?.mensualite) || 0), 0)))).toLocaleString()} EUR`
                 : '—'}
             </div>
-            <div style={{ fontSize: '11px', color: COLORS.gray400, marginTop: '4px' }}>Règle des 33%</div>
+            <div style={{ fontSize: '11px', color: COLORS.gray400, marginTop: '4px' }}>Règle des 35%</div>
           </div>
         </div>
         <div style={{ marginTop: '12px', fontSize: '12px', color: COLORS.gray400, lineHeight: '1.5' }}>

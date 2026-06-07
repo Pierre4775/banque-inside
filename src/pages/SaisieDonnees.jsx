@@ -63,6 +63,7 @@ const sousTitreStyle = {
 }
 
 function BlocRevenus({ revenus, setRevenus, label, couleur, estConjoint2, onDiviser }) {
+  if (!revenus || typeof revenus !== 'object') return null
   return (
     <div style={{ ...cardStyle, borderTop: `3px solid ${couleur}` }}>
       <div style={{ ...titleStyle, color: couleur }}>{label}</div>
@@ -98,6 +99,7 @@ function BlocRevenus({ revenus, setRevenus, label, couleur, estConjoint2, onDivi
 }
 
 function BlocDepenses({ depenses, setDepenses, label, couleur }) {
+  if (!depenses || typeof depenses !== 'object') return null
   const totalDepenses = Math.round(Object.values(depenses).reduce((a, b) => a + (parseFloat(b) || 0), 0))
 
   const sections = [
@@ -175,6 +177,7 @@ function BlocDepenses({ depenses, setDepenses, label, couleur }) {
 }
 
 function BlocImpots({ impots, setImpots, label, couleur }) {
+  if (!impots || typeof impots !== 'object') return null
   return (
     <div style={{ ...cardStyle, borderTop: `3px solid ${couleur}` }}>
       <div style={{ ...titleStyle, color: couleur }}>{label}</div>
@@ -201,6 +204,8 @@ function BlocImpots({ impots, setImpots, label, couleur }) {
 }
 
 function BlocCredits({ liste, setListe, couleur, emoji, label, situation }) {
+  if (!Array.isArray(liste)) return null
+
   const updateCredit = (index, champ, valeur) => {
     setListe(prev => {
       const copie = [...prev]
@@ -324,8 +329,16 @@ export default function SaisieDonnees() {
         })
         setImpots1({ impots: s(d.impots) })
         setImpots2({ impots: s(d.impots2) })
-        if (d.credits_immo && d.credits_immo.length > 0) setCreditsImmo(d.credits_immo)
-        if (d.credits_autre && d.credits_autre.length > 0) setCreditsAutre(d.credits_autre)
+        const parseCredits = (val) => {
+          if (!val) return null
+          if (Array.isArray(val) && val.length > 0) return val
+          if (typeof val === 'string') { try { const p = JSON.parse(val); return Array.isArray(p) && p.length > 0 ? p : null } catch { return null } }
+          return null
+        }
+        const ci = parseCredits(d.credits_immo)
+        if (ci) setCreditsImmo(ci)
+        const ca = parseCredits(d.credits_autre)
+        if (ca) setCreditsAutre(ca)
       }
     }
     charger()

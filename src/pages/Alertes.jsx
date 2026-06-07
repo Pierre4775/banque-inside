@@ -51,9 +51,9 @@ function calculerAlertes(profil) {
 
   const totalDepenses = totalDepensesHorsChargesFixes + totalChargesFixes
 
-  const creditsImmo = profil.credits_immo || []
-  const creditsAutre = profil.credits_autre || []
-  const totalMensualites = [...creditsImmo, ...creditsAutre].reduce((a, c) => a + (parseFloat(c.mensualite) || 0), 0)
+  const creditsImmo = Array.isArray(profil.credits_immo) ? profil.credits_immo : []
+  const creditsAutre = Array.isArray(profil.credits_autre) ? profil.credits_autre : []
+  const totalMensualites = [...creditsImmo, ...creditsAutre].reduce((a, c) => a + (parseFloat(c?.mensualite) || 0), 0)
 
   const loyer = (profil.logement || 0) + (profil.situation === 'foyer' ? (profil.logement2 || 0) : 0)
   const tauxEndettement = totalRevenus > 0 ? (totalMensualites + loyer) / totalRevenus * 100 : 0
@@ -61,7 +61,7 @@ function calculerAlertes(profil) {
   const tauxEpargne = totalRevenus > 0 ? epargne / totalRevenus * 100 : 0
   const tauxChargesTotales = totalRevenus > 0 ? (totalDepenses + totalMensualites) / totalRevenus * 100 : 0
 
-  const epargneCourt = (profil.epargne_court || []).reduce((a, e) => a + (parseFloat(e.montant) || 0), 0)
+  const epargneCourt = (Array.isArray(profil.epargne_court) ? profil.epargne_court : []).reduce((a, e) => a + (parseFloat(e?.montant) || 0), 0)
   const depensesMensuelles = totalDepenses + totalMensualites
   const moisFondsUrgence = depensesMensuelles > 0 ? epargneCourt / depensesMensuelles : 0
 
@@ -130,21 +130,21 @@ function calculerAlertes(profil) {
       alertes.push({
         type: 'warning', priorite: 'Haute',
         titre: 'Taux d\'endettement très élevé',
-        desc: `Votre taux d'endettement est de ${Math.round(tauxEndettement)}%, bien au-delà de la limite bancaire de 33%.`,
+        desc: `Votre taux d'endettement est de ${Math.round(tauxEndettement)}%, bien au-delà de la limite bancaire de 35%.`,
         action: 'Envisager un rachat ou regroupement de crédits pour alléger les mensualités',
       })
-    } else if (tauxEndettement > 33) {
+    } else if (tauxEndettement > 35) {
       alertes.push({
         type: 'warning', priorite: 'Haute',
         titre: 'Taux d\'endettement élevé',
-        desc: `Votre taux d'endettement est de ${Math.round(tauxEndettement)}%, au-delà de la limite bancaire de 33%.`,
+        desc: `Votre taux d'endettement est de ${Math.round(tauxEndettement)}%, au-delà de la limite bancaire de 35%.`,
         action: 'Consulter un courtier pour étudier un rachat de crédit',
       })
     } else {
       alertes.push({
         type: 'success', priorite: 'OK',
         titre: 'Taux d\'endettement sain',
-        desc: `Votre taux d'endettement est de ${Math.round(tauxEndettement)}% — dans la zone verte (seuil : 33%).`,
+        desc: `Votre taux d'endettement est de ${Math.round(tauxEndettement)}% — dans la zone verte (seuil : 35%).`,
         action: 'Aucune action requise',
       })
     }

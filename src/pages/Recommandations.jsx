@@ -126,9 +126,9 @@ function genererRecommandations(profil, objectifsSelectionnes) {
     (profil.telephonie || 0) + (profil.internet || 0) + (profil.streaming || 0) +
     (profil.electricite || 0) + (profil.gaz || 0)
 
-  const creditsImmo = profil.credits_immo || []
-  const creditsAutre = profil.credits_autre || []
-  const totalMensualites = [...creditsImmo, ...creditsAutre].reduce((a, c) => a + (parseFloat(c.mensualite) || 0), 0)
+  const creditsImmo = Array.isArray(profil.credits_immo) ? profil.credits_immo : []
+  const creditsAutre = Array.isArray(profil.credits_autre) ? profil.credits_autre : []
+  const totalMensualites = [...creditsImmo, ...creditsAutre].reduce((a, c) => a + (parseFloat(c?.mensualite) || 0), 0)
   const tauxEndettement = totalRevenus > 0 ? (totalMensualites + (profil.logement || 0)) / totalRevenus * 100 : 0
 
   const totalDepenses =
@@ -169,17 +169,17 @@ function genererRecommandations(profil, objectifsSelectionnes) {
 
   // 2. PRET IMMOBILIER
   if (actif('pret')) {
-    const mensualiteMax = Math.max(0, totalRevenus * 0.33 - totalMensualites)
+    const mensualiteMax = Math.max(0, totalRevenus * 0.35 - totalMensualites)
     const capacite = Math.round(mensualiteMax * (1 - Math.pow(1 + 3.55 / 100 / 12, -240)) / (3.55 / 100 / 12))
     recos.push({
       key: 'pret',
       icon: '🏠',
       color: COLORS.blue,
-      urgence: tauxEndettement < 20 ? 'basse' : tauxEndettement < 33 ? 'moyenne' : 'info',
+      urgence: tauxEndettement < 20 ? 'basse' : tauxEndettement < 35 ? 'moyenne' : 'info',
       titre: 'Souscrire un prêt immobilier',
-      analyse: tauxEndettement < 33
+      analyse: tauxEndettement < 35
         ? `Votre taux d'endettement actuel est de ${Math.round(tauxEndettement)}%. Vous avez une capacité d'emprunt estimée à ${capacite.toLocaleString()} EUR sur 20 ans au taux actuel du marché.`
-        : `Votre taux d'endettement est de ${Math.round(tauxEndettement)}%, proche ou au-delà de la limite bancaire de 33%. Un projet immobilier nécessiterait d'abord d'alléger vos charges.`,
+        : `Votre taux d'endettement est de ${Math.round(tauxEndettement)}%, proche ou au-delà de la limite bancaire de 35%. Un projet immobilier nécessiterait d'abord d'alléger vos charges.`,
       pistes: [
         `Simulez votre projet avec plusieurs courtiers pour obtenir le meilleur taux.`,
         `Constituez un apport si possible — 10% minimum est généralement demandé pour couvrir les frais de notaire.`,
@@ -201,9 +201,9 @@ function genererRecommandations(profil, objectifsSelectionnes) {
       key: 'credits',
       icon: '💳',
       color: COLORS.red,
-      urgence: tauxEndettement > 33 ? 'haute' : tauxEndettement > 20 ? 'moyenne' : 'basse',
+      urgence: tauxEndettement > 35 ? 'haute' : tauxEndettement > 20 ? 'moyenne' : 'basse',
       titre: 'Optimiser vos crédits en cours',
-      analyse: `Vous remboursez actuellement ${Math.round(totalMensualites)} EUR de mensualités. ${tauxEndettement > 33 ? 'Votre taux d\'endettement dépasse 33% — un regroupement de crédits pourrait libérer du pouvoir d\'achat.' : 'Un rachat ou regroupement de crédits pourrait vous permettre de réduire vos mensualités ou votre coût total.'}`,
+      analyse: `Vous remboursez actuellement ${Math.round(totalMensualites)} EUR de mensualités. ${tauxEndettement > 35 ? 'Votre taux d\'endettement dépasse 35% — un regroupement de crédits pourrait libérer du pouvoir d\'achat.' : 'Un rachat ou regroupement de crédits pourrait vous permettre de réduire vos mensualités ou votre coût total.'}`,
       pistes: [
         `Rachat de crédit : si les taux ont baissé depuis votre souscription, une renégociation peut faire économiser des milliers d'euros.`,
         `Regroupement de crédits : fusionner plusieurs crédits en un seul peut réduire la mensualité globale.`,
@@ -427,7 +427,7 @@ export default function Recommandations() {
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '10px' }}>
               {[
                 { label: 'Revenus nets', value: `${Math.round((profil.salaire || 0) + (profil.revenus_fonciers || 0) + (profil.autres_revenus || 0) - (profil.impots || 0)).toLocaleString()} EUR`, color: COLORS.green },
-                { label: 'Mensualités', value: `${Math.round([...(profil.credits_immo || []), ...(profil.credits_autre || [])].reduce((a, c) => a + (parseFloat(c.mensualite) || 0), 0)).toLocaleString()} EUR`, color: COLORS.red },
+                { label: 'Mensualités', value: `${Math.round([...(Array.isArray(profil.credits_immo) ? profil.credits_immo : []), ...(Array.isArray(profil.credits_autre) ? profil.credits_autre : [])].reduce((a, c) => a + (parseFloat(c?.mensualite) || 0), 0)).toLocaleString()} EUR`, color: COLORS.red },
                 { label: 'Charges fixes', value: `${Math.round((profil.assurance_auto || 0) + (profil.assurance_habitation || 0) + (profil.assurance_sante || 0) + (profil.telephonie || 0) + (profil.internet || 0) + (profil.streaming || 0) + (profil.electricite || 0) + (profil.gaz || 0)).toLocaleString()} EUR`, color: COLORS.amber },
                 { label: 'Situation', value: profil.situation === 'foyer' ? 'En foyer' : 'Seul(e)', color: COLORS.blue },
               ].map((item, i) => (

@@ -81,13 +81,13 @@ export default function PatrimoineNet({ isActive }) {
         }
       }
       // Recharge toujours les crédits (viennent de SaisieDonnees)
-      if (d.credits_immo && d.credits_immo.length > 0) setCreditsImmo(d.credits_immo)
+      if (Array.isArray(d.credits_immo) && d.credits_immo.length > 0) setCreditsImmo(d.credits_immo)
       // Charge les données de formulaire uniquement au premier chargement
       if (!hasLoadedData.current) {
-        if (d.epargne_court && d.epargne_court.length > 0) setEpargneCourt(d.epargne_court)
-        if (d.epargne_moyen && d.epargne_moyen.length > 0) setEpargneMoyen(d.epargne_moyen)
-        if (d.epargne_long && d.epargne_long.length > 0) setEpargneLong(d.epargne_long)
-        if (d.biens_immo && d.biens_immo.length > 0) setBiens(d.biens_immo)
+        if (Array.isArray(d.epargne_court) && d.epargne_court.length > 0) setEpargneCourt(d.epargne_court)
+        if (Array.isArray(d.epargne_moyen) && d.epargne_moyen.length > 0) setEpargneMoyen(d.epargne_moyen)
+        if (Array.isArray(d.epargne_long) && d.epargne_long.length > 0) setEpargneLong(d.epargne_long)
+        if (Array.isArray(d.biens_immo) && d.biens_immo.length > 0) setBiens(d.biens_immo)
         hasLoadedData.current = true
       }
     } else {

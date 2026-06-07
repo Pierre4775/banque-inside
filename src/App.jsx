@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, Component } from 'react'
 import { PieChart, Pie, Cell, LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts'
 import SaisieDonnees from './pages/SaisieDonnees'
 import AnalyseBancaire from './pages/AnalyseBancaire'
@@ -10,6 +10,38 @@ import GuideUtilisation from './pages/GuideUtilisation'
 import Recommandations from './pages/Recommandations'
 import { supabase } from './supabase'
 import jsPDF from 'jspdf'
+
+class ErrorBoundary extends Component {
+  constructor(props) {
+    super(props)
+    this.state = { error: null }
+  }
+  static getDerivedStateFromError(error) {
+    return { error }
+  }
+  render() {
+    if (this.state.error) {
+      return (
+        <div style={{ padding: '40px', textAlign: 'center', fontFamily: 'Inter, sans-serif' }}>
+          <div style={{ fontSize: '40px', marginBottom: '16px' }}>⚠️</div>
+          <div style={{ fontSize: '16px', fontWeight: '600', color: '#0f2744', marginBottom: '8px' }}>
+            Une erreur s'est produite sur cette page
+          </div>
+          <div style={{ fontSize: '13px', color: '#94a3b8', marginBottom: '24px' }}>
+            {this.state.error.message}
+          </div>
+          <button
+            onClick={() => this.setState({ error: null })}
+            style={{ background: '#1a56db', color: 'white', border: 'none', borderRadius: '10px', padding: '10px 24px', fontSize: '14px', cursor: 'pointer', fontWeight: '600' }}
+          >
+            Réessayer
+          </button>
+        </div>
+      )
+    }
+    return this.props.children
+  }
+}
 
 function useCountUp(target, duration = 400) {
   const [value, setValue] = useState(0)
@@ -108,9 +140,9 @@ function genererPDF(profil, vueMode) {
   const d1 = (profil.logement||0)+(profil.alimentation||0)+(profil.transports||0)+(profil.loisirs||0)+(profil.sante||0)+(profil.autres_depenses||0)+(profil.assurance_auto||0)+(profil.assurance_habitation||0)+(profil.assurance_sante||0)+(profil.telephonie||0)+(profil.internet||0)+(profil.streaming||0)+(profil.electricite||0)+(profil.gaz||0)
   const d2 = (profil.logement2||0)+(profil.alimentation2||0)+(profil.transports2||0)+(profil.loisirs2||0)+(profil.sante2||0)+(profil.autres_depenses2||0)+(profil.assurance_auto2||0)+(profil.assurance_habitation2||0)+(profil.assurance_sante2||0)+(profil.telephonie2||0)+(profil.internet2||0)+(profil.streaming2||0)+(profil.electricite2||0)+(profil.gaz2||0)
   const totalDepenses = vueMode==='foyer' ? d1+d2 : d1
-  const cI = profil.credits_immo||[]
-  const cA = profil.credits_autre||[]
-  const totalMens = [...cI,...cA].reduce((a,c)=>a+(parseFloat(c.mensualite)||0),0)
+  const cI = Array.isArray(profil.credits_immo) ? profil.credits_immo : []
+  const cA = Array.isArray(profil.credits_autre) ? profil.credits_autre : []
+  const totalMens = [...cI,...cA].reduce((a,c)=>a+(parseFloat(c?.mensualite)||0),0)
   const loyer = vueMode==='foyer' ? (profil.logement||0)+(profil.logement2||0) : (profil.logement||0)
   const chargesEndt = totalMens+loyer
   const tauxEndt = totalRevenus>0 ? Math.round(chargesEndt/totalRevenus*100) : 0
@@ -121,15 +153,15 @@ function genererPDF(profil, vueMode) {
   const epargne = totalRevenus-totalDepenses-totalMens-totalImpots
   const tauxEp = totalRevenus>0 ? Math.round(epargne/totalRevenus*100) : 0
   const score = Math.min(100,Math.max(0,Math.round(50+tauxEp-tauxEndt)))
-  const mensMax = Math.max(0, totalRevenus*0.33-totalMens)
+  const mensMax = Math.max(0, totalRevenus*0.35-totalMens)
   const rr = TAUX_MARCHE[20]/100/12
   const nn = 240
   const capEmprunt = mensMax>0 ? Math.round(mensMax*(1-Math.pow(1+rr,-nn))/rr) : 0
-  const epCourt = (profil.epargne_court||[]).reduce((a,e)=>a+(parseFloat(e.montant)||0),0)
-  const epMoyen = (profil.epargne_moyen||[]).reduce((a,e)=>a+(parseFloat(e.montant)||0),0)
-  const epLong  = (profil.epargne_long||[]).reduce((a,e)=>a+(parseFloat(e.montant)||0),0)
+  const epCourt = (Array.isArray(profil.epargne_court) ? profil.epargne_court : []).reduce((a,e)=>a+(parseFloat(e?.montant)||0),0)
+  const epMoyen = (Array.isArray(profil.epargne_moyen) ? profil.epargne_moyen : []).reduce((a,e)=>a+(parseFloat(e?.montant)||0),0)
+  const epLong  = (Array.isArray(profil.epargne_long) ? profil.epargne_long : []).reduce((a,e)=>a+(parseFloat(e?.montant)||0),0)
   const totFin  = epCourt+epMoyen+epLong
-  const totImmo = (profil.biens_immo||[]).reduce((a,b)=>{
+  const totImmo = (Array.isArray(profil.biens_immo) ? profil.biens_immo : []).reduce((a,b)=>{
     const val=parseFloat(b.valeur)||0
     const cr=cI[parseInt(b.creditLie)]
     const cap=cr?parseFloat(cr.capital)||0:0
@@ -286,7 +318,7 @@ function genererPDF(profil, vueMode) {
   const kW = (sW-9)/4
   kpiBox(M,        y, kW, 24, 'Revenus nets',  fmtK(revenusNets),  'par mois', cBlue,  cBlueL)
   kpiBox(M+kW+3,   y, kW, 24, 'Epargne',       fmtK(epargne),      'par mois', epargne>=0?cGreen:cRed, epargne>=0?cGreenL:cRedL)
-  kpiBox(M+(kW+3)*2, y, kW, 24, 'Endettement', fmtPct(tauxEndt),   tauxEndt<=33?'Zone verte':'Attention', tauxEndt<=33?cGreen:cRed, tauxEndt<=33?cGreenL:cRedL)
+  kpiBox(M+(kW+3)*2, y, kW, 24, 'Endettement', fmtPct(tauxEndt),   tauxEndt<=35?'Zone verte':'Attention', tauxEndt<=35?cGreen:cRed, tauxEndt<=35?cGreenL:cRedL)
   kpiBox(M+(kW+3)*3, y, kW, 24, 'Patrimoine',  fmtK(patTotal),     'net total', cNavy, cGrayL)
 
   y += 30
@@ -396,8 +428,8 @@ function genererPDF(profil, vueMode) {
   const indics = [
     ['Epargne mensuelle disponible',         fmt(epargne),        epargne>=0?cGreen:cRed,  epargne>=0?cGreenL:cRedL],
     ['Taux d\'epargne',                       fmtPct(tauxEp),      tauxEp>=15?cGreen:cAmber, tauxEp>=15?cGreenL:cAmberL],
-    ['Taux d\'endettement (avant impots)',    fmtPct(tauxEndt),    tauxEndt<=33?cGreen:cRed, tauxEndt<=33?cGreenL:cRedL],
-    ['Taux d\'endettement (apres impots)',    fmtPct(tauxEndtNet), tauxEndtNet<=33?cGreen:cRed, tauxEndtNet<=33?cGreenL:cRedL],
+    ['Taux d\'endettement (avant impots)',    fmtPct(tauxEndt),    tauxEndt<=35?cGreen:cRed, tauxEndt<=35?cGreenL:cRedL],
+    ['Taux d\'endettement (apres impots)',    fmtPct(tauxEndtNet), tauxEndtNet<=35?cGreen:cRed, tauxEndtNet<=35?cGreenL:cRedL],
     ['Reste a vivre (avant impots)',          fmt(rav),            rav>=0?cGreen:cRed,       rav>=0?cGreenL:cRedL],
     ['Reste a vivre (apres impots)',          fmt(ravNet),         ravNet>=0?cGreen:cRed,    ravNet>=0?cGreenL:cRedL],
     ['Capacite d\'emprunt (20 ans)',          fmt(capEmprunt),     cBlue,                    cBlueL],
@@ -427,18 +459,18 @@ function genererPDF(profil, vueMode) {
   doc.roundedRect(M, y, barTotalW, 8, 2, 2, 'F')
 
   const barFillW = Math.min(tauxEndt,100)/100*barTotalW
-  const bCol = tauxEndt<=33?cGreen:tauxEndt<=50?cAmber:cRed
+  const bCol = tauxEndt<=35?cGreen:tauxEndt<=50?cAmber:cRed
   doc.setFillColor(...bCol)
   doc.roundedRect(M, y, barFillW, 8, 2, 2, 'F')
 
-  // Marqueur 33%
-  const x33 = M + barTotalW*0.33
+  // Marqueur 35%
+  const x33 = M + barTotalW*0.35
   doc.setDrawColor(100,116,139); doc.setLineWidth(0.4)
   doc.line(x33, y, x33, y+8)
 
   doc.setFontSize(7); doc.setFont('helvetica','normal'); doc.setTextColor(...cGray)
   doc.text('0%', M, y+13)
-  doc.text('33% — limite bancaire', x33-2, y+13, {align:'right'})
+  doc.text('35% — limite bancaire', x33-2, y+13, {align:'right'})
   doc.text('100%', W-M, y+13, {align:'right'})
   doc.setFontSize(8.5); doc.setFont('helvetica','bold'); doc.setTextColor(...bCol)
   doc.text('Votre taux : '+tauxEndt+'%', W/2, y+13, {align:'center'})
@@ -502,7 +534,7 @@ function genererPDF(profil, vueMode) {
   else if (tauxEp >= 15) points.push({type:'success', text:'Taux d\'epargne satisfaisant ('+tauxEp+'%) — continuez sur cette lancee'})
   else                   points.push({type:'warning', text:'Taux d\'epargne de '+tauxEp+'% — objectif recommande : 15 a 20%'})
 
-  if (tauxEndt > 33) points.push({type:'danger',  text:'Taux d\'endettement eleve ('+tauxEndt+'%) — depasse la limite bancaire de 33%'})
+  if (tauxEndt > 35) points.push({type:'danger',  text:'Taux d\'endettement eleve ('+tauxEndt+'%) — depasse la limite bancaire de 35%'})
   else               points.push({type:'success', text:'Taux d\'endettement sain ('+tauxEndt+'%) — dans la zone verte'})
 
   if (ravNet < 500)    points.push({type:'warning', text:'Reste a vivre apres impots faible ('+Math.round(ravNet)+' EUR) — a surveiller'})
@@ -635,9 +667,9 @@ function DashboardPage({ profil, profilCharge, vueMode, setVueMode, dureeEmprunt
   const depenses1 = Math.round((profil.logement || 0) + (profil.alimentation || 0) + (profil.transports || 0) + (profil.loisirs || 0) + (profil.sante || 0) + (profil.autres_depenses || 0) + (profil.assurance_auto || 0) + (profil.assurance_habitation || 0) + (profil.assurance_sante || 0) + (profil.telephonie || 0) + (profil.internet || 0) + (profil.streaming || 0) + (profil.electricite || 0) + (profil.gaz || 0))
   const depenses2 = Math.round((profil.logement2 || 0) + (profil.alimentation2 || 0) + (profil.transports2 || 0) + (profil.loisirs2 || 0) + (profil.sante2 || 0) + (profil.autres_depenses2 || 0) + (profil.assurance_auto2 || 0) + (profil.assurance_habitation2 || 0) + (profil.assurance_sante2 || 0) + (profil.telephonie2 || 0) + (profil.internet2 || 0) + (profil.streaming2 || 0) + (profil.electricite2 || 0) + (profil.gaz2 || 0))
   const totalDepenses = vueMode === 'foyer' ? depenses1 + depenses2 : depenses1
-  const creditsImmo = profil.credits_immo || []
-  const creditsAutre = profil.credits_autre || []
-  const totalMensualites = Math.round([...creditsImmo, ...creditsAutre].reduce((a, c) => a + (parseFloat(c.mensualite) || 0), 0))
+  const creditsImmo = Array.isArray(profil.credits_immo) ? profil.credits_immo : []
+  const creditsAutre = Array.isArray(profil.credits_autre) ? profil.credits_autre : []
+  const totalMensualites = Math.round([...creditsImmo, ...creditsAutre].reduce((a, c) => a + (parseFloat(c?.mensualite) || 0), 0))
   const loyer = vueMode === 'foyer' ? Math.round((profil.logement || 0) + (profil.logement2 || 0)) : Math.round(profil.logement || 0)
   const chargesEndettement = totalMensualites + loyer
   const tauxEndettement = totalRevenus > 0 ? Math.round((chargesEndettement / totalRevenus) * 100) : 0
@@ -648,7 +680,7 @@ function DashboardPage({ profil, profilCharge, vueMode, setVueMode, dureeEmprunt
   const epargne = totalRevenus - totalDepenses - totalMensualites - totalImpots
   const tauxEpargne = totalRevenus > 0 ? Math.round((epargne / totalRevenus) * 100) : 0
   const score = Math.min(100, Math.max(0, Math.round(50 + tauxEpargne - tauxEndettement)))
-  const mensualiteMax = Math.round(Math.max(0, totalRevenus * 0.33 - totalMensualites))
+  const mensualiteMax = Math.round(Math.max(0, totalRevenus * 0.35 - totalMensualites))
   const r = TAUX_MARCHE[dureeEmprunt] / 100 / 12
   const n = dureeEmprunt * 12
   const capaciteEmprunt = mensualiteMax > 0 ? Math.round(mensualiteMax * (1 - Math.pow(1 + r, -n)) / r) : 0
@@ -777,17 +809,17 @@ function DashboardPage({ profil, profilCharge, vueMode, setVueMode, dureeEmprunt
           </div>
         </StatCard>
 
-        <StatCard title="Taux d'endettement" accent={tauxEndettement <= 33 ? COLORS.green : COLORS.red}>
+        <StatCard title="Taux d'endettement" accent={tauxEndettement <= 35 ? COLORS.green : COLORS.red}>
           <div style={{ display: 'flex', gap: '8px', marginBottom: '12px' }}>
             <div style={{ flex: 1, background: COLORS.gray50, borderRadius: '10px', padding: '10px', textAlign: 'center' }}>
               <div style={{ fontSize: '10px', color: COLORS.gray400, fontWeight: '700', letterSpacing: '0.04em', marginBottom: '4px' }}>AVANT IMPÔTS</div>
-              <div style={{ fontSize: '20px', fontWeight: '800', color: tauxEndettement <= 33 ? COLORS.green : COLORS.red }}>
+              <div style={{ fontSize: '20px', fontWeight: '800', color: tauxEndettement <= 35 ? COLORS.green : COLORS.red }}>
                 <AnimatedNumber value={tauxEndettement} suffix="%" />
               </div>
             </div>
             <div style={{ flex: 1, background: COLORS.purpleLight, borderRadius: '10px', padding: '10px', textAlign: 'center' }}>
               <div style={{ fontSize: '10px', color: COLORS.purple, fontWeight: '700', letterSpacing: '0.04em', marginBottom: '4px' }}>APRÈS IMPÔTS</div>
-              <div style={{ fontSize: '20px', fontWeight: '800', color: tauxEndettementApresImpots <= 33 ? COLORS.green : COLORS.red }}>
+              <div style={{ fontSize: '20px', fontWeight: '800', color: tauxEndettementApresImpots <= 35 ? COLORS.green : COLORS.red }}>
                 <AnimatedNumber value={tauxEndettementApresImpots} suffix="%" />
               </div>
             </div>
@@ -796,13 +828,14 @@ function DashboardPage({ profil, profilCharge, vueMode, setVueMode, dureeEmprunt
             <div style={{
               height: '100%', borderRadius: '3px',
               width: `${Math.min(tauxEndettementApresImpots, 100)}%`,
-              background: tauxEndettementApresImpots <= 33 ? COLORS.green : tauxEndettementApresImpots <= 50 ? COLORS.amber : COLORS.red,
+              background: tauxEndettementApresImpots <= 35 ? COLORS.green : tauxEndettementApresImpots <= 50 ? COLORS.amber : COLORS.red,
               transition: 'width 0.6s ease'
             }} />
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', color: COLORS.gray400, marginBottom: '10px' }}>
-            <span>0%</span><span>33%</span><span>50%</span><span>100%</span>
+            <span>0%</span><span>35%</span><span>50%</span><span>100%</span>
           </div>
+          <div style={{ fontSize: '10px', color: COLORS.gray400, fontWeight: '700', letterSpacing: '0.06em', marginBottom: '6px' }}>RESTE À VIVRE</div>
           <div style={{ display: 'flex', gap: '8px' }}>
             <div style={{ flex: 1, padding: '8px', borderRadius: '8px', background: resteAVivre >= 0 ? COLORS.greenLight : COLORS.redLight }}>
               <div style={{ fontSize: '10px', color: COLORS.gray600, fontWeight: '600' }}>AVANT IMPÔTS</div>
@@ -1084,7 +1117,9 @@ export default function App() {
           {renderPage()}
           {mountedPages.has('Saisie donnees') && (
             <div style={{ display: active === 'Saisie donnees' ? 'block' : 'none' }}>
-              <SaisieDonnees />
+              <ErrorBoundary>
+                <SaisieDonnees />
+              </ErrorBoundary>
             </div>
           )}
           {mountedPages.has('Patrimoine net') && (

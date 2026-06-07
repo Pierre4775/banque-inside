@@ -159,7 +159,7 @@ export default function GuideUtilisation() {
 
         <Titre>📊 Taux d'endettement</Titre>
         <Info couleur={COLORS.amber}>
-          C'est le calcul utilisé par les banques pour évaluer votre capacité à emprunter. Il mesure la part de vos revenus consacrée au remboursement de vos crédits et de votre loyer. La règle bancaire impose un maximum de <strong>33%</strong>.
+          C'est le calcul utilisé par les banques pour évaluer votre capacité à emprunter. Il mesure la part de vos revenus consacrée au remboursement de vos crédits et de votre loyer. La règle bancaire impose un maximum de <strong>35%</strong>.
         </Info>
         <Info couleur={COLORS.blue}>
           <strong>Avant impôts</strong> — C'est le calcul bancaire classique, basé sur vos revenus bruts. C'est ce que regarde votre banque quand vous faites une demande de prêt.
@@ -175,7 +175,7 @@ export default function GuideUtilisation() {
 
         <Titre>🏦 Capacité d'emprunt</Titre>
         <Info couleur={COLORS.navy}>
-          Indique le montant maximum que vous pouvez emprunter en respectant la règle des 33% d'endettement. Votre capacité d'emprunt tient compte de vos crédits déjà en cours — seule la part disponible est utilisée pour calculer le nouveau prêt possible.
+          Indique le montant maximum que vous pouvez emprunter en respectant la règle des 35% d'endettement. Votre capacité d'emprunt tient compte de vos crédits déjà en cours — seule la part disponible est utilisée pour calculer le nouveau prêt possible.
         </Info>
         <Info couleur={COLORS.blue}>
           Utilisez le toggle <strong>10 / 15 / 20 / 25 ans</strong> pour voir comment la durée du prêt influence le montant empruntable. Les taux utilisés sont les taux moyens du marché actuels mis à jour régulièrement.
