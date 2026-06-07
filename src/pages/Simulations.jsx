@@ -86,7 +86,7 @@ export default function Simulations() {
   const [rendementLong, setRendementLong] = useState(8)
   const [dureeLong, setDureeLong] = useState(20)
   const [montantCredit, setMontantCredit] = useState(200000)
-  const [tauxCredit, setTauxCredit] = useState(3.5)
+  const [tauxCredit, setTauxCredit] = useState(3.50)
   const [tauxAssurance, setTauxAssurance] = useState(0.36)
   const [dureeCredit, setDureeCredit] = useState(20)
   const [apport, setApport] = useState(20000)
@@ -115,36 +115,38 @@ export default function Simulations() {
     }
   }).map(d => ({ ...d, total: d.court + d.moyen + d.long }))
 
-  // Calculs crédit
+  // Calculs crédit — capital emprunté = prix + notaire - apport
   const montantFraisNotaire = Math.round(montantCredit * fraisNotaire / 100)
-  const montantEmprunte = montantCredit - apport
-  const coutTotal_achat = montantCredit + montantFraisNotaire
+  const montantEmprunte = Math.max(0, montantCredit + montantFraisNotaire - apport)
+  const coutTotalAchat = montantCredit + montantFraisNotaire
 
-  // Mensualité crédit (hors assurance)
   const r = tauxCredit / 100 / 12
   const n = dureeCredit * 12
-  const mensualiteHorsAssurance = r > 0 ? Math.round(montantEmprunte * r / (1 - Math.pow(1 + r, -n))) : Math.round(montantEmprunte / n)
 
-  // Mensualité assurance
+  const mensualiteHorsAssurance = r > 0
+    ? Math.round(montantEmprunte * r / (1 - Math.pow(1 + r, -n)))
+    : Math.round(montantEmprunte / n)
+
   const mensualiteAssurance = Math.round(montantEmprunte * tauxAssurance / 100 / 12)
-
-  // Mensualité totale
   const mensualiteCredit = mensualiteHorsAssurance + mensualiteAssurance
 
-  // Coûts
   const coutInterets = (mensualiteHorsAssurance * n) - montantEmprunte
   const coutAssurance = mensualiteAssurance * n
   const coutTotal = mensualiteCredit * n
   const coutOperation = montantFraisNotaire + coutInterets + coutAssurance
 
+  // Graphique amortissement corrigé
+  // CRD après k mensualités = montantEmprunte * (1+r)^k - mensualite * ((1+r)^k - 1) / r
   const dataCredit = Array.from({ length: dureeCredit }, (_, i) => {
-    const an = i + 1
-    const capitalRembourse = Math.round(montantEmprunte * (1 - Math.pow(1 + r, -(n - an * 12)) / (1 - Math.pow(1 + r, -n))))
-    const capitalRestant = montantEmprunte - capitalRembourse
+    const k = (i + 1) * 12
+    const crd = r > 0
+      ? Math.max(0, Math.round(montantEmprunte * Math.pow(1 + r, k) - mensualiteHorsAssurance * (Math.pow(1 + r, k) - 1) / r))
+      : Math.max(0, montantEmprunte - mensualiteHorsAssurance * k)
+    const capitalRembourse = Math.min(montantEmprunte, montantEmprunte - crd)
     return {
-      an: `${an}`,
-      capitalRestant: Math.max(0, capitalRestant),
-      capitalRembourse: Math.min(montantEmprunte, capitalRembourse),
+      an: `${i + 1}`,
+      capitalRembourse: Math.max(0, capitalRembourse),
+      capitalRestant: crd,
     }
   })
 
@@ -268,7 +270,12 @@ export default function Simulations() {
               format={v => `${v}%`}
             />
             <SliderRow label="Apport personnel" value={apport} min={0} max={Math.round(montantCredit * 0.5)} step={1000} onChange={setApport} format={v => `${v.toLocaleString()} EUR`} />
-            <SliderRow label="Taux d'intérêt" value={tauxCredit} min={0.5} max={8} step={0.1} onChange={setTauxCredit} format={v => `${v}%`} />
+            <SliderRow
+              label="Taux d'intérêt"
+              value={tauxCredit} min={0.5} max={8} step={0.01}
+              onChange={v => setTauxCredit(Math.round(v * 100) / 100)}
+              format={v => `${v.toFixed(2)}%`}
+            />
             <SliderRow
               label="Taux assurance emprunteur"
               sublabel={`Soit ${mensualiteAssurance.toLocaleString()} EUR/mois`}
@@ -304,8 +311,8 @@ export default function Simulations() {
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px', marginBottom: '16px' }}>
-            <ResultCard label="MONTANT EMPRUNTÉ" value={`${montantEmprunte.toLocaleString()} EUR`} color={COLORS.blue} />
-            <ResultCard label="MENSUALITÉ TOTALE" value={`${mensualiteCredit.toLocaleString()} EUR`} sublabel={`dont ${mensualiteHorsAssurance.toLocaleString()} crédit + ${mensualiteAssurance.toLocaleString()} assurance`} color={COLORS.green} />
+            <ResultCard label="CAPITAL EMPRUNTÉ" value={`${montantEmprunte.toLocaleString()} EUR`} sublabel={`Prix + notaire - apport`} color={COLORS.blue} />
+            <ResultCard label="MENSUALITÉ TOTALE" value={`${mensualiteCredit.toLocaleString()} EUR`} sublabel={`${mensualiteHorsAssurance.toLocaleString()} crédit + ${mensualiteAssurance.toLocaleString()} assurance`} color={COLORS.green} />
             <ResultCard label="COÛT TOTAL INTÉRÊTS" value={`${coutInterets.toLocaleString()} EUR`} color={COLORS.red} />
             <ResultCard label="COÛT TOTAL ASSURANCE" value={`${coutAssurance.toLocaleString()} EUR`} sublabel={`sur ${dureeCredit} ans`} color={COLORS.purple} />
           </div>

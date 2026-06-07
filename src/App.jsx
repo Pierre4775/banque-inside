@@ -6,6 +6,8 @@ import Simulations from './pages/Simulations'
 import Alertes from './pages/Alertes'
 import Login from './pages/Login'
 import PatrimoineNet from './pages/PatrimoineNet'
+import GuideUtilisation from './pages/GuideUtilisation'
+import Recommandations from './pages/Recommandations'
 import { supabase } from './supabase'
 
 function useCountUp(target, duration = 400) {
@@ -92,17 +94,13 @@ function DashboardPage({ profil, vueMode, setVueMode, dureeEmprunt, setDureeEmpr
   const revenus2 = Math.round((profil.salaire2 || 0) + (profil.revenus_fonciers2 || 0) + (profil.autres_revenus2 || 0))
   const totalRevenus = vueMode === 'foyer' ? revenus1 + revenus2 : revenus1
 
-  const depenses1 = Math.round((profil.logement || 0) + (profil.alimentation || 0) + (profil.transports || 0) + (profil.loisirs || 0) + (profil.sante || 0) + (profil.autres_depenses || 0) + (profil.impots || 0))
-  const depenses2 = Math.round((profil.logement2 || 0) + (profil.alimentation2 || 0) + (profil.transports2 || 0) + (profil.loisirs2 || 0) + (profil.sante2 || 0) + (profil.autres_depenses2 || 0) + (profil.impots2 || 0))
-  const totalDepenses = vueMode === 'foyer' ? depenses1 + depenses2 : depenses1
-
   const impots1 = profil.impots || 0
   const impots2 = profil.impots2 || 0
   const totalImpots = vueMode === 'foyer' ? impots1 + impots2 : impots1
 
-  const depensesHorsImpots1 = depenses1 - impots1
-  const depensesHorsImpots2 = depenses2 - impots2
-  const totalDepensesHorsImpots = vueMode === 'foyer' ? depensesHorsImpots1 + depensesHorsImpots2 : depensesHorsImpots1
+  const depenses1 = Math.round((profil.logement || 0) + (profil.alimentation || 0) + (profil.transports || 0) + (profil.loisirs || 0) + (profil.sante || 0) + (profil.autres_depenses || 0) + (profil.assurance_auto || 0) + (profil.assurance_habitation || 0) + (profil.assurance_sante || 0) + (profil.telephonie || 0) + (profil.internet || 0) + (profil.streaming || 0) + (profil.electricite || 0) + (profil.gaz || 0))
+  const depenses2 = Math.round((profil.logement2 || 0) + (profil.alimentation2 || 0) + (profil.transports2 || 0) + (profil.loisirs2 || 0) + (profil.sante2 || 0) + (profil.autres_depenses2 || 0) + (profil.assurance_auto2 || 0) + (profil.assurance_habitation2 || 0) + (profil.assurance_sante2 || 0) + (profil.telephonie2 || 0) + (profil.internet2 || 0) + (profil.streaming2 || 0) + (profil.electricite2 || 0) + (profil.gaz2 || 0))
+  const totalDepenses = vueMode === 'foyer' ? depenses1 + depenses2 : depenses1
 
   const creditsImmo = profil.credits_immo || []
   const creditsAutre = profil.credits_autre || []
@@ -118,11 +116,10 @@ function DashboardPage({ profil, vueMode, setVueMode, dureeEmprunt, setDureeEmpr
   const resteAVivre = totalRevenus - chargesEndettement
   const resteAVivreApresImpots = revenusApresImpots - chargesEndettement
 
-  const epargne = totalRevenus - totalDepenses - totalMensualites
+  const epargne = totalRevenus - totalDepenses - totalMensualites - totalImpots
   const tauxEpargne = totalRevenus > 0 ? Math.round((epargne / totalRevenus) * 100) : 0
   const score = Math.min(100, Math.max(0, Math.round(50 + tauxEpargne - tauxEndettement)))
 
-  // Capacité emprunt avec taux marché
   const mensualiteMax = Math.round(Math.max(0, totalRevenus * 0.33 - totalMensualites))
   const r = TAUX_MARCHE[dureeEmprunt] / 100 / 12
   const n = dureeEmprunt * 12
@@ -135,6 +132,9 @@ function DashboardPage({ profil, vueMode, setVueMode, dureeEmprunt, setDureeEmpr
     loisirs: (profil.loisirs || 0) + (profil.loisirs2 || 0),
     sante: (profil.sante || 0) + (profil.sante2 || 0),
     impots: (profil.impots || 0) + (profil.impots2 || 0),
+    assurances: (profil.assurance_auto || 0) + (profil.assurance_habitation || 0) + (profil.assurance_sante || 0) + (profil.assurance_auto2 || 0) + (profil.assurance_habitation2 || 0) + (profil.assurance_sante2 || 0),
+    telecom: (profil.telephonie || 0) + (profil.internet || 0) + (profil.streaming || 0) + (profil.telephonie2 || 0) + (profil.internet2 || 0) + (profil.streaming2 || 0),
+    energie: (profil.electricite || 0) + (profil.gaz || 0) + (profil.electricite2 || 0) + (profil.gaz2 || 0),
     autres: (profil.autres_depenses || 0) + (profil.autres_depenses2 || 0),
   } : {
     logement: profil.logement || 0,
@@ -143,6 +143,9 @@ function DashboardPage({ profil, vueMode, setVueMode, dureeEmprunt, setDureeEmpr
     loisirs: profil.loisirs || 0,
     sante: profil.sante || 0,
     impots: profil.impots || 0,
+    assurances: (profil.assurance_auto || 0) + (profil.assurance_habitation || 0) + (profil.assurance_sante || 0),
+    telecom: (profil.telephonie || 0) + (profil.internet || 0) + (profil.streaming || 0),
+    energie: (profil.electricite || 0) + (profil.gaz || 0),
     autres: profil.autres_depenses || 0,
   }
 
@@ -150,9 +153,12 @@ function DashboardPage({ profil, vueMode, setVueMode, dureeEmprunt, setDureeEmpr
     { name: 'Logement', value: depensesBase.logement, color: COLORS.navy },
     { name: 'Alimentation', value: depensesBase.alimentation, color: COLORS.blue },
     { name: 'Transports', value: depensesBase.transports, color: COLORS.green },
-    { name: 'Loisirs', value: depensesBase.loisirs, color: COLORS.amber },
+    { name: 'Assurances', value: depensesBase.assurances, color: COLORS.amber },
     { name: 'Impôts', value: depensesBase.impots, color: COLORS.purple },
-    { name: 'Santé', value: depensesBase.sante, color: COLORS.red },
+    { name: 'Énergie', value: depensesBase.energie, color: '#f59e0b' },
+    { name: 'Télécom', value: depensesBase.telecom, color: '#0ea5e9' },
+    { name: 'Loisirs', value: depensesBase.loisirs, color: COLORS.red },
+    { name: 'Santé', value: depensesBase.sante, color: '#ec4899' },
     { name: 'Autres', value: depensesBase.autres, color: COLORS.gray400 },
   ].filter(d => d.value > 0)
 
@@ -288,7 +294,7 @@ function DashboardPage({ profil, vueMode, setVueMode, dureeEmprunt, setDureeEmpr
               <div>
                 <div style={{ fontSize: '11px', color: COLORS.red, fontWeight: '600' }}>DÉPENSES TOTALES</div>
                 <div style={{ fontSize: '20px', fontWeight: '800', color: COLORS.navy }}>
-                  <AnimatedNumber value={totalDepenses} /> <span style={{ fontSize: '12px', fontWeight: '400' }}>EUR</span>
+                  <AnimatedNumber value={totalDepenses + totalImpots} /> <span style={{ fontSize: '12px', fontWeight: '400' }}>EUR</span>
                 </div>
               </div>
               <div style={{ fontSize: '24px' }}>↓</div>
@@ -348,8 +354,6 @@ function DashboardPage({ profil, vueMode, setVueMode, dureeEmprunt, setDureeEmpr
 
         <div style={{ background: COLORS.navy, borderRadius: '16px', padding: '20px', boxShadow: '0 1px 4px rgba(15,39,68,0.08)' }}>
           <div style={{ fontSize: '11px', fontWeight: '700', color: COLORS.gray400, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '12px' }}>Capacité d'emprunt</div>
-
-          {/* TOGGLE DUREE */}
           <div style={{ display: 'flex', gap: '4px', marginBottom: '14px', background: COLORS.navyLight, padding: '3px', borderRadius: '8px' }}>
             {[10, 15, 20, 25].map(d => (
               <button key={d} onClick={() => setDureeEmprunt(d)} style={{
@@ -363,7 +367,6 @@ function DashboardPage({ profil, vueMode, setVueMode, dureeEmprunt, setDureeEmpr
               </button>
             ))}
           </div>
-
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '12px' }}>
             <div style={{ textAlign: 'center', background: COLORS.navyLight, borderRadius: '10px', padding: '12px' }}>
               <div style={{ fontSize: '11px', color: COLORS.gray400, marginBottom: '6px' }}>Montant max</div>
@@ -380,7 +383,6 @@ function DashboardPage({ profil, vueMode, setVueMode, dureeEmprunt, setDureeEmpr
               <div style={{ fontSize: '11px', color: COLORS.gray400 }}>EUR/mois</div>
             </div>
           </div>
-
           <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 12px', background: COLORS.navyLight, borderRadius: '10px', fontSize: '11px', color: COLORS.gray400 }}>
             <span>Taux {TAUX_MARCHE[dureeEmprunt]}% · {dureeEmprunt} ans</span>
             <span>Endettement actuel : {tauxEndettement}%</span>
@@ -439,6 +441,8 @@ export default function App() {
       'Patrimoine net': <PatrimoineNet />,
       'Simulations': <Simulations />,
       'Alertes': <Alertes />,
+      'Recommandations': <Recommandations />,
+      'Guide utilisation': <GuideUtilisation />,
     }
     return pages[active] || <DashboardPage profil={profil} vueMode={vueMode} setVueMode={setVueMode} dureeEmprunt={dureeEmprunt} setDureeEmprunt={setDureeEmprunt} />
   }
