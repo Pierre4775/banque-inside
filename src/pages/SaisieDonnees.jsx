@@ -98,55 +98,120 @@ function BlocRevenus({ revenus, setRevenus, label, couleur, estConjoint2, onDivi
   )
 }
 
-function BlocDepenses({ depenses, setDepenses, label, couleur }) {
+function BlocDepenses({ depenses, setDepenses, label, couleur, depensesCustom, setDepensesCustom, situation, conjointIndex }) {
   if (!depenses || typeof depenses !== 'object') return null
-  const totalDepenses = Math.round(Object.values(depenses).reduce((a, b) => a + (parseFloat(b) || 0), 0))
+
+  const [showForm, setShowForm] = useState(false)
+  const [newNom, setNewNom] = useState('')
+  const [newMontant, setNewMontant] = useState('')
+  const [newType, setNewType] = useState('commune')
+
+  const estFoyer = situation === 'foyer'
+  const customList = depensesCustom || []
+
+  const myCustom = customList.filter(d => {
+    if (!estFoyer) return true
+    if (d.type === 'commune') return true
+    return d.conjoint === conjointIndex
+  })
+
+  const totalStandard = Math.round(Object.values(depenses).reduce((a, b) => a + (parseFloat(b) || 0), 0))
+  const totalCustomLocal = Math.round(myCustom.reduce((a, d) => {
+    const amt = parseFloat(d.montant) || 0
+    return a + (d.type === 'commune' ? Math.round(amt / 2) : amt)
+  }, 0))
+  const totalBlock = totalStandard + totalCustomLocal
+
+  const validerCustom = () => {
+    const nom = newNom.trim()
+    const montant = newMontant.trim()
+    if (!nom && !parseFloat(montant)) return
+    const entry = estFoyer
+      ? { nom, montant, type: newType, ...(newType === 'personnelle' ? { conjoint: conjointIndex } : {}) }
+      : { nom, montant }
+    setDepensesCustom(prev => [...(prev || []), entry])
+    setNewNom(''); setNewMontant(''); setNewType('commune'); setShowForm(false)
+  }
+
+  const supprimerCustom = (target) => {
+    setDepensesCustom(prev => (prev || []).filter(d => d !== target))
+  }
 
   const sections = [
-    {
-      titre: '🏠 Logement & Vie courante',
-      champs: [
-        { key: 'logement', label: 'Logement (loyer / charges copro)', placeholder: '800' },
-        { key: 'alimentation', label: 'Alimentation & courses', placeholder: '400' },
-        { key: 'transports', label: 'Transports (carburant, abonnement)', placeholder: '200' },
-        { key: 'sante', label: 'Santé (pharmacie, médecins)', placeholder: '50' },
-        { key: 'loisirs', label: 'Loisirs & sorties', placeholder: '150' },
-      ]
-    },
-    {
-      titre: '🛡 Assurances',
-      champs: [
-        { key: 'assurance_auto', label: 'Assurance auto', placeholder: '80' },
-        { key: 'assurance_sante', label: 'Mutuelle / Assurance santé', placeholder: '60' },
-        { key: 'assurance_habitation', label: 'Assurance habitation', placeholder: '25' },
-      ]
-    },
-    {
-      titre: '⚡ Énergie',
-      champs: [
-        { key: 'electricite', label: 'Électricité', placeholder: '80' },
-        { key: 'gaz', label: 'Gaz', placeholder: '50' },
-      ]
-    },
-    {
-      titre: '📱 Télécom & Abonnements',
-      champs: [
-        { key: 'internet', label: 'Box internet', placeholder: '35' },
-        { key: 'telephonie', label: 'Téléphonie mobile', placeholder: '20' },
-        { key: 'streaming', label: 'Streaming & abonnements numériques', placeholder: '30' },
-      ]
-    },
-    {
-      titre: '📦 Autres',
-      champs: [
-        { key: 'autres', label: 'Autres dépenses', placeholder: '100' },
-      ]
-    },
+    { titre: '🏠 Logement & Vie courante', champs: [
+      { key: 'logement', label: 'Logement (loyer / charges copro)', placeholder: '800' },
+      { key: 'alimentation', label: 'Alimentation & courses', placeholder: '400' },
+      { key: 'transports', label: 'Transports (carburant, abonnement)', placeholder: '200' },
+      { key: 'sante', label: 'Santé (pharmacie, médecins)', placeholder: '50' },
+      { key: 'loisirs', label: 'Loisirs & sorties', placeholder: '150' },
+    ]},
+    { titre: '🛡 Assurances', champs: [
+      { key: 'assurance_auto', label: 'Assurance auto', placeholder: '80' },
+      { key: 'assurance_sante', label: 'Mutuelle / Assurance santé', placeholder: '60' },
+      { key: 'assurance_habitation', label: 'Assurance habitation', placeholder: '25' },
+    ]},
+    { titre: '⚡ Énergie', champs: [
+      { key: 'electricite', label: 'Électricité', placeholder: '80' },
+      { key: 'gaz', label: 'Gaz', placeholder: '50' },
+    ]},
+    { titre: '📱 Télécom & Abonnements', champs: [
+      { key: 'internet', label: 'Box internet', placeholder: '35' },
+      { key: 'telephonie', label: 'Téléphonie mobile', placeholder: '20' },
+      { key: 'streaming', label: 'Streaming & abonnements numériques', placeholder: '30' },
+    ]},
+    { titre: '📦 Autres', champs: [
+      { key: 'autres', label: 'Autres dépenses', placeholder: '100' },
+    ]},
   ]
 
   return (
     <div style={{ ...cardStyle, borderTop: `3px solid ${couleur}` }}>
       <div style={{ ...titleStyle, color: couleur }}>{label}</div>
+
+      {/* Lien discret + formulaire inline */}
+      {!showForm ? (
+        <button onClick={() => setShowForm(true)} style={{
+          background: 'none', border: 'none', padding: '0 0 16px 0', fontSize: '12px',
+          color: COLORS.gray400, cursor: 'pointer', display: 'block',
+          textDecoration: 'underline', textDecorationStyle: 'dotted', textUnderlineOffset: '3px',
+        }}>+ Ajouter une dépense personnalisée</button>
+      ) : (
+        <div style={{ background: COLORS.gray50, borderRadius: '10px', padding: '14px', marginBottom: '16px', border: `1px solid ${COLORS.gray200}` }}>
+          <div style={{ display: 'flex', gap: '8px', marginBottom: '10px' }}>
+            <input type="text" autoFocus
+              style={{ ...inputStyle, flex: 2 }}
+              placeholder="Nom (ex : Garde enfants)"
+              value={newNom}
+              onChange={e => setNewNom(e.target.value)}
+            />
+            <input type="text" inputMode="numeric"
+              style={{ ...inputStyle, flex: 1 }}
+              placeholder="Montant"
+              value={newMontant}
+              onChange={e => setNewMontant(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && validerCustom()}
+            />
+          </div>
+          {estFoyer && (
+            <div style={{ display: 'flex', gap: '20px', marginBottom: '10px' }}>
+              {[
+                { val: 'commune', texte: 'Commune (÷ 2 par conjoint)' },
+                { val: 'personnelle', texte: `Personnelle (Conjoint ${conjointIndex})` },
+              ].map(({ val, texte }) => (
+                <label key={val} style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: COLORS.gray600, cursor: 'pointer' }}>
+                  <input type="radio" value={val} checked={newType === val} onChange={() => setNewType(val)} style={{ accentColor: couleur }} />
+                  <span style={{ fontWeight: newType === val ? '600' : '400' }}>{texte}</span>
+                </label>
+              ))}
+            </div>
+          )}
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <button onClick={validerCustom} style={{ flex: 1, background: couleur, color: 'white', border: 'none', borderRadius: '8px', padding: '8px', fontSize: '12px', fontWeight: '700', cursor: 'pointer' }}>Valider</button>
+            <button onClick={() => { setShowForm(false); setNewNom(''); setNewMontant(''); setNewType('commune') }}
+              style={{ flex: 1, background: COLORS.gray100, color: COLORS.gray600, border: 'none', borderRadius: '8px', padding: '8px', fontSize: '12px', cursor: 'pointer' }}>Annuler</button>
+          </div>
+        </div>
+      )}
 
       {sections.map((section, si) => (
         <div key={si}>
@@ -166,10 +231,33 @@ function BlocDepenses({ depenses, setDepenses, label, couleur }) {
         </div>
       ))}
 
+      {/* Dépenses personnalisées dans la liste */}
+      {myCustom.length > 0 && (
+        <div style={{ marginTop: '16px' }}>
+          <div style={sousTitreStyle}>Dépenses personnalisées</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+            {myCustom.map((d, i) => (
+              <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '9px 12px', background: COLORS.amberLight, borderRadius: '8px', border: '1px solid #fde68a' }}>
+                <div>
+                  <span style={{ fontSize: '13px', fontWeight: '600', color: COLORS.navy }}>{d.nom || '—'}</span>
+                  {d.type === 'commune' && <span style={{ fontSize: '11px', color: COLORS.amber, marginLeft: '6px' }}>· commune ÷ 2</span>}
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span style={{ fontSize: '14px', fontWeight: '700', color: COLORS.navy }}>
+                    {(d.type === 'commune' ? Math.round((parseFloat(d.montant)||0)/2) : (parseFloat(d.montant)||0)).toLocaleString()} EUR
+                  </span>
+                  <button onClick={() => supprimerCustom(d)} style={{ background: COLORS.redLight, color: COLORS.red, border: 'none', borderRadius: '6px', padding: '3px 8px', cursor: 'pointer', fontSize: '14px', fontWeight: '700' }}>×</button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       <div style={{ background: COLORS.redLight, borderRadius: '10px', padding: '14px', borderLeft: `3px solid ${COLORS.red}`, marginTop: '20px' }}>
         <div style={{ fontSize: '11px', color: COLORS.red, fontWeight: '700', letterSpacing: '0.06em', marginBottom: '4px' }}>TOTAL DÉPENSES (hors impôts)</div>
         <div style={{ fontSize: '22px', fontWeight: '800', color: COLORS.navy }}>
-          {totalDepenses.toLocaleString()} <span style={{ fontSize: '14px', fontWeight: '400', color: COLORS.gray400 }}>EUR</span>
+          {totalBlock.toLocaleString()} <span style={{ fontSize: '14px', fontWeight: '400', color: COLORS.gray400 }}>EUR</span>
         </div>
       </div>
     </div>
@@ -281,6 +369,7 @@ export default function SaisieDonnees() {
   const [impots2, setImpots2] = useState({ ...impotsVide })
   const [creditsImmo, setCreditsImmo] = useState([{ ...creditVide }])
   const [creditsAutre, setCreditsAutre] = useState([{ ...creditVide }])
+  const [depensesCustom, setDepensesCustom] = useState([])
   const [message, setMessage] = useState('')
   const [loading, setLoading] = useState(false)
 
@@ -289,8 +378,9 @@ export default function SaisieDonnees() {
   const totalDepenses1 = Math.round(Object.values(depenses1).reduce((a, b) => a + (parseFloat(b) || 0), 0))
   const totalDepenses2 = Math.round(Object.values(depenses2).reduce((a, b) => a + (parseFloat(b) || 0), 0))
   const totalMensualites = Math.round([...creditsImmo, ...creditsAutre].reduce((a, c) => a + (parseFloat(c.mensualite) || 0), 0))
+  const totalCustom = Math.round(depensesCustom.reduce((a, d) => a + (parseFloat(d.montant) || 0), 0))
   const totalRevenus = situation === 'foyer' ? totalRevenus1 + totalRevenus2 : totalRevenus1
-  const totalDepenses = situation === 'foyer' ? totalDepenses1 + totalDepenses2 : totalDepenses1
+  const totalDepenses = (situation === 'foyer' ? totalDepenses1 + totalDepenses2 : totalDepenses1) + totalCustom
   const totalImpotsVal = situation === 'foyer'
     ? (parseFloat(impots1.impots) || 0) + (parseFloat(impots2.impots) || 0)
     : (parseFloat(impots1.impots) || 0)
@@ -339,6 +429,9 @@ export default function SaisieDonnees() {
         if (ci) setCreditsImmo(ci)
         const ca = parseCredits(d.credits_autre)
         if (ca) setCreditsAutre(ca)
+        const dc = Array.isArray(d.depenses_custom) ? d.depenses_custom
+          : (typeof d.depenses_custom === 'string' ? (() => { try { return JSON.parse(d.depenses_custom) } catch { return [] } })() : [])
+        if (Array.isArray(dc) && dc.length > 0) setDepensesCustom(dc)
       }
     }
     charger()
@@ -379,6 +472,7 @@ export default function SaisieDonnees() {
       gaz: parseFloat(depenses1.gaz) || 0,
       credits_immo: creditsImmo,
       credits_autre: creditsAutre,
+      depenses_custom: depensesCustom.filter(d => d.nom.trim() || parseFloat(d.montant) > 0),
     }
 
     // Les champs _2 et patrimoine ne sont inclus que pour le mode foyer,
@@ -488,11 +582,11 @@ export default function SaisieDonnees() {
       {/* DEPENSES */}
       {situation === 'foyer' ? (
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-          <BlocDepenses depenses={depenses1} setDepenses={setDepenses1} label="🛒 Dépenses Conjoint 1" couleur={COLORS.blue} />
-          <BlocDepenses depenses={depenses2} setDepenses={setDepenses2} label="🛒 Dépenses Conjoint 2" couleur={COLORS.purple} />
+          <BlocDepenses depenses={depenses1} setDepenses={setDepenses1} label="🛒 Dépenses Conjoint 1" couleur={COLORS.blue} depensesCustom={depensesCustom} setDepensesCustom={setDepensesCustom} situation={situation} conjointIndex={1} />
+          <BlocDepenses depenses={depenses2} setDepenses={setDepenses2} label="🛒 Dépenses Conjoint 2" couleur={COLORS.purple} depensesCustom={depensesCustom} setDepensesCustom={setDepensesCustom} situation={situation} conjointIndex={2} />
         </div>
       ) : (
-        <BlocDepenses depenses={depenses1} setDepenses={setDepenses1} label="🛒 Dépenses mensuelles" couleur={COLORS.red} />
+        <BlocDepenses depenses={depenses1} setDepenses={setDepenses1} label="🛒 Dépenses mensuelles" couleur={COLORS.red} depensesCustom={depensesCustom} setDepensesCustom={setDepensesCustom} situation={situation} />
       )}
 
       {/* CREDITS */}

@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { supabase } from '../supabase'
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend, BarChart, Bar } from 'recharts'
 
 const COLORS = {
@@ -74,8 +75,15 @@ function ResultCard({ label, value, sublabel, color, bg }) {
   )
 }
 
-export default function Simulations() {
-  const [familleActive, setFamilleActive] = useState('epargne')
+export default function Simulations({ prefillMontant }) {
+  const [familleActive, setFamilleActive] = useState('credit')
+
+  useEffect(() => {
+    if (prefillMontant != null && prefillMontant > 0) {
+      setMontantCredit(Math.min(1000000, Math.max(50000, prefillMontant)))
+      setFamilleActive('credit')
+    }
+  }, [prefillMontant])
   const [epargneCourt, setEpargneCourt] = useState(200)
   const [rendementCourt, setRendementCourt] = useState(3)
   const [dureeCourt, setDureeCourt] = useState(3)
@@ -91,6 +99,30 @@ export default function Simulations() {
   const [dureeCredit, setDureeCredit] = useState(20)
   const [apport, setApport] = useState(20000)
   const [fraisNotaire, setFraisNotaire] = useState(8)
+  const [typeProjet, setTypeProjet] = useState('principale')
+  const [revenusSitu, setRevenusSitu] = useState(3000)
+  const [mensualitesSitu, setMensualitesSitu] = useState(0)
+  const [loyerSitu, setLoyerSitu] = useState(0)
+  const [loyerLocatifSimu, setLoyerLocatifSimu] = useState(500)
+  const [importLoading, setImportLoading] = useState(false)
+
+  const importerDonnees = async () => {
+    setImportLoading(true)
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) { setImportLoading(false); return }
+    const { data } = await supabase.from('profils_financiers').select('*').eq('user_id', user.id).order('created_at', { ascending: false }).limit(1)
+    if (data && data.length > 0) {
+      const d = data[0]
+      const totalRev = (d.salaire||0)+(d.revenus_fonciers||0)+(d.autres_revenus||0)+(d.salaire2||0)+(d.revenus_fonciers2||0)+(d.autres_revenus2||0)
+      const parseC = v => Array.isArray(v) ? v : (typeof v==='string' ? (() => { try { return JSON.parse(v) } catch { return [] } })() : [])
+      const mensual = [...parseC(d.credits_immo), ...parseC(d.credits_autre)].reduce((a, c) => a + (parseFloat(c.mensualite)||0), 0)
+      const loyer = (d.logement||0) + (d.logement2||0)
+      setRevenusSitu(Math.round(totalRev))
+      setMensualitesSitu(Math.round(mensual))
+      setLoyerSitu(Math.round(loyer))
+    }
+    setImportLoading(false)
+  }
 
   const calculerEpargne = (mensuel, taux, ans) => {
     const r = taux / 100 / 12
@@ -135,6 +167,18 @@ export default function Simulations() {
   const coutTotal = mensualiteCredit * n
   const coutOperation = montantFraisNotaire + coutInterets + coutAssurance
 
+  // Taux d'endettement résultant selon type de projet
+  const revenusPourEndet = typeProjet === 'locatif' ? revenusSitu + loyerLocatifSimu * 0.7 : revenusSitu
+  const chargesAvantCredit = (typeProjet === 'primo' || typeProjet === 'principale')
+    ? mensualitesSitu
+    : mensualitesSitu + loyerSitu
+  const tauxEndettementSimu = revenusPourEndet > 0
+    ? Math.round((chargesAvantCredit + mensualiteCredit) / revenusPourEndet * 100)
+    : 0
+  const tauxColor = tauxEndettementSimu <= 35 ? COLORS.green : tauxEndettementSimu <= 40 ? COLORS.amber : COLORS.red
+  const tauxBg = tauxEndettementSimu <= 35 ? COLORS.greenLight : tauxEndettementSimu <= 40 ? COLORS.amberLight : COLORS.redLight
+  const tauxLabel = tauxEndettementSimu <= 35 ? 'Finançable' : tauxEndettementSimu <= 40 ? 'Limite bancaire' : 'Refus probable'
+
   // Graphique amortissement corrigé
   // CRD après k mensualités = montantEmprunte * (1+r)^k - mensualite * ((1+r)^k - 1) / r
   const dataCredit = Array.from({ length: dureeCredit }, (_, i) => {
@@ -160,8 +204,8 @@ export default function Simulations() {
 
       <div style={{ display: 'flex', gap: '8px', marginBottom: '24px', background: COLORS.white, padding: '4px', borderRadius: '12px', boxShadow: '0 1px 4px rgba(15,39,68,0.08)' }}>
         {[
-          { key: 'epargne', label: '💰 Épargne', desc: 'Projections court, moyen et long terme' },
           { key: 'credit', label: '🏦 Crédit', desc: 'Simulation de prêt immobilier' },
+          { key: 'epargne', label: '💰 Épargne', desc: 'Projections court, moyen et long terme' },
         ].map(f => (
           <button key={f.key} onClick={() => setFamilleActive(f.key)} style={{
             flex: 1, padding: '12px 16px', borderRadius: '10px', border: 'none',
@@ -259,6 +303,69 @@ export default function Simulations() {
 
       {familleActive === 'credit' && (
         <>
+          {/* SITUATION FINANCIÈRE + IMPORT */}
+          <div style={{ ...cardStyle, borderTop: `3px solid ${COLORS.blue}` }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
+              <div>
+                <div style={{ ...sectionTitle, marginBottom: '2px', paddingBottom: '0', borderBottom: 'none' }}>Votre situation financière</div>
+                <div style={{ fontSize: '12px', color: COLORS.gray400 }}>Renseignez vos revenus et charges actuelles</div>
+              </div>
+              <button onClick={importerDonnees} disabled={importLoading} style={{
+                background: COLORS.blue, color: 'white', border: 'none', borderRadius: '8px',
+                padding: '8px 14px', fontSize: '12px', fontWeight: '700', cursor: importLoading ? 'not-allowed' : 'pointer',
+                opacity: importLoading ? 0.7 : 1, whiteSpace: 'nowrap', flexShrink: 0
+              }}>
+                {importLoading ? 'Chargement...' : 'Importer mes données'}
+              </button>
+            </div>
+            <SliderRow label="Revenus mensuels nets" value={revenusSitu} min={500} max={15000} step={100} onChange={setRevenusSitu} format={v => `${v.toLocaleString()} EUR`} />
+            <SliderRow label="Mensualités crédits existants" value={mensualitesSitu} min={0} max={5000} step={50} onChange={setMensualitesSitu} format={v => `${v.toLocaleString()} EUR`} />
+            <SliderRow label="Loyer actuel" value={loyerSitu} min={0} max={3000} step={50} onChange={setLoyerSitu} format={v => `${v.toLocaleString()} EUR`} sublabel="Loyer ou charges de copropriété actuelles" />
+          </div>
+
+          {/* TYPE DE PROJET */}
+          <div style={cardStyle}>
+            <div style={sectionTitle}>Type de projet</div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '16px' }}>
+              {[
+                { id: 'primo', label: 'Primo-accédant résidence principale', desc: 'Première acquisition, le loyer est remplacé par le crédit' },
+                { id: 'principale', label: 'Résidence principale', desc: 'Le loyer actuel est remplacé par la nouvelle mensualité' },
+                { id: 'secondaire', label: 'Résidence secondaire', desc: 'Loyer conservé + nouvelle mensualité dans le calcul' },
+                { id: 'locatif', label: 'Investissement locatif', desc: '70% des revenus locatifs estimés ajoutés aux revenus' },
+                { id: 'autre', label: 'Autre crédit', desc: 'Loyer conservé dans le calcul d\'endettement' },
+              ].map(p => (
+                <button key={p.id} onClick={() => setTypeProjet(p.id)} style={{
+                  textAlign: 'left', padding: '12px 14px', borderRadius: '10px', border: 'none',
+                  background: typeProjet === p.id ? COLORS.bluePale : COLORS.gray50,
+                  borderLeft: `3px solid ${typeProjet === p.id ? COLORS.blue : COLORS.gray200}`,
+                  cursor: 'pointer', transition: 'all 0.2s ease',
+                }}>
+                  <div style={{ fontSize: '13px', fontWeight: '700', color: typeProjet === p.id ? COLORS.blue : COLORS.navy, marginBottom: '2px' }}>{p.label}</div>
+                  <div style={{ fontSize: '11px', color: COLORS.gray400 }}>{p.desc}</div>
+                </button>
+              ))}
+            </div>
+
+            {typeProjet === 'primo' && (
+              <div style={{ padding: '14px 16px', background: COLORS.bluePale, borderRadius: '10px', borderLeft: `3px solid ${COLORS.blue}`, fontSize: '13px', color: COLORS.navy, lineHeight: '1.6' }}>
+                <div style={{ fontWeight: '700', marginBottom: '6px', color: COLORS.blue }}>Prêt à Taux Zéro (PTZ) et dispositifs primo-accédants</div>
+                En tant que primo-accédant, vous pouvez bénéficier du PTZ, du Prêt Action Logement et d'autres dispositifs à taux réduits selon votre zone géographique et revenus. Comparez les offres et simulez votre éligibilité au PTZ via un courtier ou votre banque.{' '}
+                <a href="#" style={{ color: COLORS.blue, fontWeight: '600' }}>Comparer les offres partenaires →</a>
+              </div>
+            )}
+
+            {typeProjet === 'locatif' && (
+              <SliderRow
+                label="Revenus locatifs estimés"
+                sublabel="70% pris en compte dans le calcul (règle bancaire)"
+                value={loyerLocatifSimu} min={0} max={3000} step={50}
+                onChange={setLoyerLocatifSimu}
+                format={v => `${v.toLocaleString()} EUR/mois`}
+              />
+            )}
+          </div>
+
+          {/* PARAMÈTRES DU CRÉDIT */}
           <div style={cardStyle}>
             <div style={sectionTitle}>🏦 Paramètres du crédit</div>
             <SliderRow label="Prix du bien" value={montantCredit} min={50000} max={1000000} step={5000} onChange={setMontantCredit} format={v => `${v.toLocaleString()} EUR`} />
@@ -286,7 +393,7 @@ export default function Simulations() {
             <SliderRow label="Durée du crédit" value={dureeCredit} min={5} max={30} onChange={setDureeCredit} format={v => `${v} ans`} />
           </div>
 
-          {/* RESUME OPERATION */}
+          {/* RÉSUMÉ OPÉRATION */}
           <div style={{ background: COLORS.navy, borderRadius: '16px', padding: '20px', marginBottom: '16px' }}>
             <div style={{ fontSize: '13px', fontWeight: '700', color: COLORS.gray400, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '16px' }}>
               🏠 Résumé de l'opération
@@ -311,12 +418,32 @@ export default function Simulations() {
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px', marginBottom: '16px' }}>
-            <ResultCard label="CAPITAL EMPRUNTÉ" value={`${montantEmprunte.toLocaleString()} EUR`} sublabel={`Prix + notaire - apport`} color={COLORS.blue} />
+            <ResultCard label="CAPITAL EMPRUNTÉ" value={`${montantEmprunte.toLocaleString()} EUR`} sublabel="Prix + notaire - apport" color={COLORS.blue} />
             <ResultCard label="MENSUALITÉ TOTALE" value={`${mensualiteCredit.toLocaleString()} EUR`} sublabel={`${mensualiteHorsAssurance.toLocaleString()} crédit + ${mensualiteAssurance.toLocaleString()} assurance`} color={COLORS.green} />
             <ResultCard label="COÛT TOTAL INTÉRÊTS" value={`${coutInterets.toLocaleString()} EUR`} color={COLORS.red} />
             <ResultCard label="COÛT TOTAL ASSURANCE" value={`${coutAssurance.toLocaleString()} EUR`} sublabel={`sur ${dureeCredit} ans`} color={COLORS.purple} />
           </div>
 
+          {/* TAUX D'ENDETTEMENT RÉSULTANT */}
+          {revenusSitu > 0 && (
+            <div style={{ background: tauxBg, borderRadius: '14px', padding: '18px 20px', marginBottom: '16px', borderLeft: `4px solid ${tauxColor}` }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
+                <div>
+                  <div style={{ fontSize: '11px', fontWeight: '700', color: tauxColor, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '4px' }}>Taux d'endettement résultant</div>
+                  <div style={{ fontSize: '13px', color: COLORS.gray600 }}>
+                    {(typeProjet === 'primo' || typeProjet === 'principale') ? 'Loyer remplacé par la nouvelle mensualité' : 'Loyer conservé dans les charges'}
+                    {typeProjet === 'locatif' && ` · +${Math.round(loyerLocatifSimu * 0.7).toLocaleString()} EUR/mois de revenus locatifs`}
+                  </div>
+                </div>
+                <div style={{ textAlign: 'right' }}>
+                  <div style={{ fontSize: '36px', fontWeight: '800', color: tauxColor, lineHeight: 1 }}>{tauxEndettementSimu}%</div>
+                  <div style={{ fontSize: '13px', fontWeight: '700', color: tauxColor, marginTop: '4px' }}>{tauxLabel}</div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* AMORTISSEMENT */}
           <div style={cardStyle}>
             <div style={sectionTitle}>Amortissement du crédit</div>
             <ResponsiveContainer width="100%" height={250}>
@@ -331,8 +458,10 @@ export default function Simulations() {
             </ResponsiveContainer>
           </div>
 
-          <div style={{ padding: '14px 16px', background: COLORS.amberLight, borderRadius: '10px', fontSize: '12px', color: COLORS.amber, fontWeight: '500', borderLeft: `3px solid ${COLORS.amber}` }}>
-            ⚠️ Simulation indicative uniquement. Consultez un professionnel agréé avant toute décision financière.
+          {/* DISCLAIMER */}
+          <div style={{ background: COLORS.gray50, borderRadius: '12px', padding: '16px 18px', border: `1px solid ${COLORS.gray200}`, fontSize: '12px', color: COLORS.gray600, lineHeight: '1.7' }}>
+            <div style={{ fontWeight: '700', color: COLORS.navy, marginBottom: '6px', fontSize: '13px' }}>Avertissement important</div>
+            Cette simulation est fournie à titre indicatif uniquement. Elle ne constitue pas une offre de crédit ni un engagement de financement. L'acceptation d'un crédit dépend de l'analyse complète de votre dossier par l'établissement prêteur. Les taux et conditions peuvent varier. Consultez un courtier ou conseiller financier agréé avant toute décision.
           </div>
         </>
       )}
