@@ -1277,12 +1277,37 @@ export default function App() {
   return (
     <div style={{ display: 'flex', minHeight: '100vh', background: COLORS.gray50, fontFamily: "'Inter', -apple-system, sans-serif" }}>
       <div style={{ width: '260px', background: COLORS.navy, color: 'white', display: window.innerWidth < 768 ? 'none' : 'flex', flexDirection: 'column', flexShrink: 0, position: 'sticky', top: 0, height: '100vh', overflow: 'hidden' }}>
-        <div style={{ flexShrink: 0, padding: '12px 16px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-          <div style={{ fontSize: '16px', fontWeight: '800', letterSpacing: '0.05em', color: 'white' }}>BANQUE INSIDE</div>
-          <div style={{ fontSize: '11px', color: COLORS.gray400, marginTop: '3px', letterSpacing: '0.08em' }}>ANALYSE FINANCIÈRE</div>
+        <div style={{ flexShrink: 0, padding: '12px 16px 0px', borderBottom: '1px solid rgba(255,255,255,0.06)', display: 'flex', justifyContent: 'center' }}>
+          <svg viewBox="0 0 300 185" width="200" height="130" xmlns="http://www.w3.org/2000/svg">
+            {/* Boussole — centre cx=150 cy=60, r_outer=45 */}
+            <circle cx="150" cy="60" r="45" fill="none" stroke="white" strokeWidth="1.5" opacity="0.12"/>
+            <circle cx="150" cy="60" r="39" fill="#163459"/>
+            <circle cx="150" cy="60" r="36" fill="none" stroke="#3b82f6" strokeWidth="0.5" opacity="0.25"/>
+            {/* Ticks cardinaux */}
+            <line x1="150" y1="15" x2="150" y2="22" stroke="#3b82f6" strokeWidth="2.5" strokeLinecap="round"/>
+            <line x1="150" y1="98" x2="150" y2="105" stroke="white" strokeWidth="1.5" strokeLinecap="round" opacity="0.2"/>
+            <line x1="105" y1="60" x2="112" y2="60" stroke="white" strokeWidth="1.5" strokeLinecap="round" opacity="0.2"/>
+            <line x1="188" y1="60" x2="195" y2="60" stroke="white" strokeWidth="1.5" strokeLinecap="round" opacity="0.2"/>
+            {/* Croix fantôme */}
+            <line x1="150" y1="24" x2="150" y2="96" stroke="white" strokeWidth="0.5" opacity="0.06"/>
+            <line x1="114" y1="60" x2="186" y2="60" stroke="white" strokeWidth="0.5" opacity="0.06"/>
+            {/* Aiguilles */}
+            <polygon points="150,26 155,60 150,54 145,60" fill="#3b82f6"/>
+            <polygon points="150,94 155,60 150,66 145,60" fill="white" opacity="0.22"/>
+            {/* Centre */}
+            <circle cx="150" cy="60" r="3.5" fill="#163459" stroke="#3b82f6" strokeWidth="1.5"/>
+            <circle cx="150" cy="60" r="1.5" fill="#3b82f6"/>
+            {/* Texte ANAFIP */}
+            <text x="150" y="138" textAnchor="middle" fill="white" fontSize="22" fontFamily="Inter, sans-serif" fontWeight="600" letterSpacing="8">ANAFIP</text>
+            {/* Séparateur */}
+            <line x1="65" y1="148" x2="235" y2="148" stroke="#3b82f6" strokeWidth="0.8" opacity="0.3"/>
+            <circle cx="65" cy="148" r="2" fill="#3b82f6" opacity="0.4"/>
+            <circle cx="235" cy="148" r="2" fill="#3b82f6" opacity="0.4"/>
+            {/* Slogan */}
+            <text x="150" y="165" textAnchor="middle" fill="#3b82f6" fontSize="9" fontFamily="Inter, sans-serif" fontWeight="300" letterSpacing="1.5">mon analyse financière personnelle</text>
+          </svg>
         </div>
-        <div style={{ height: '32px', flexShrink: 0 }} />
-        <nav className="sidebar-nav" style={{ flex: '0 0 auto', padding: '0 10px 12px', overflowY: 'hidden', scrollbarWidth: 'none' }}>
+        <nav className="sidebar-nav" style={{ flex: '0 0 auto', padding: '4px 10px 12px', overflowY: 'hidden', scrollbarWidth: 'none' }}>
           {navItems.map(item => {
             const isActive = active === item.label
             return (
