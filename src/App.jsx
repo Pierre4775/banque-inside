@@ -626,10 +626,10 @@ function genererPDF(profil, vueMode) {
 function StatCard({ title, children, accent }) {
   return (
     <div style={{
-      background: COLORS.white, borderRadius: '14px', padding: '14px',
+      background: COLORS.white, borderRadius: '14px', padding: '12px 14px',
       boxShadow: '0 1px 4px rgba(15,39,68,0.08), 0 4px 16px rgba(15,39,68,0.04)',
       borderTop: `3px solid ${accent || COLORS.blue}`,
-      display: 'flex', flexDirection: 'column', justifyContent: 'space-between', minHeight: 0, flexShrink: 1,
+      display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
     }}>
       <div style={{ fontSize: '10px', fontWeight: '700', color: COLORS.gray400, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '10px' }}>{title}</div>
       {children}
@@ -754,8 +754,8 @@ function DashboardPage({ profil, profilCharge, vueMode, setVueMode, dureeEmprunt
   const scoreLabel = score >= 70 ? 'Profil solide' : score >= 50 ? 'Profil correct' : 'A améliorer'
 
   return (
-    <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '10px', background: COLORS.gray50 }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+    <div style={{ height: 'calc(100vh - 60px)', overflow: 'hidden', display: 'flex', flexDirection: 'column', padding: '12px 16px', gap: '10px', background: COLORS.gray50, boxSizing: 'border-box' }}>
+      <div style={{ flex: '0 0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
           <h1 style={{ fontSize: '18px', fontWeight: '700', color: COLORS.navy, margin: 0 }}>Tableau de bord</h1>
           <p style={{ fontSize: '12px', color: COLORS.gray400, margin: '3px 0 0' }}>Vue d'ensemble de votre situation financière</p>
@@ -791,12 +791,12 @@ function DashboardPage({ profil, profilCharge, vueMode, setVueMode, dureeEmprunt
         </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px', alignItems: 'stretch' }}>
+      <div style={{ flex: '0 0 auto', display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '10px', alignItems: 'stretch' }}>
 
         {/* ── SCORE ── */}
         <StatCard title="Score financier" accent={scoreColor}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '10px' }}>
-            <div style={{ position: 'relative', width: '60px', height: '60px', flexShrink: 0 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px', marginBottom: '10px' }}>
+            <div style={{ position: 'relative', width: '90px', height: '90px', flexShrink: 0 }}>
               <svg viewBox="0 0 100 100" style={{ width: '100%', height: '100%', transform: 'rotate(-90deg)' }}>
                 <circle cx="50" cy="50" r="40" fill="none" stroke={COLORS.gray200} strokeWidth="10" />
                 <circle cx="50" cy="50" r="40" fill="none" stroke={scoreColor} strokeWidth="10"
@@ -804,13 +804,13 @@ function DashboardPage({ profil, profilCharge, vueMode, setVueMode, dureeEmprunt
                   style={{ transition: 'stroke-dasharray 0.6s ease' }} />
               </svg>
               <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-                <span style={{ fontSize: '17px', fontWeight: '800', color: COLORS.navy }}>{score}</span>
+                <span style={{ fontSize: '22px', fontWeight: '800', color: COLORS.navy }}>{score}</span>
                 <span style={{ fontSize: '10px', color: COLORS.gray400 }}>/100</span>
               </div>
             </div>
-            <div>
+            <div style={{ textAlign: 'center' }}>
               <div style={{ fontSize: '13px', fontWeight: '700', color: scoreColor }}>{scoreLabel}</div>
-              <div style={{ fontSize: '11px', color: COLORS.gray400, marginTop: '3px' }}>Indice de santé financière</div>
+              <div style={{ fontSize: '10px', color: COLORS.gray400, marginTop: '2px' }}>Indice de santé financière</div>
             </div>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
@@ -827,16 +827,18 @@ function DashboardPage({ profil, profilCharge, vueMode, setVueMode, dureeEmprunt
 
         {/* ── ÉPARGNE ── */}
         <StatCard title={`Épargne mensuelle ${vueMode === 'foyer' ? '· Foyer' : ''}`} accent={epargne >= 0 ? COLORS.green : COLORS.red}>
-          <div style={{ fontSize: '22px', fontWeight: '800', color: epargne >= 0 ? COLORS.green : COLORS.red, marginBottom: '4px' }}>
-            <AnimatedNumber value={epargne} /> <span style={{ fontSize: '13px', fontWeight: '400', color: COLORS.gray400 }}>EUR</span>
-          </div>
-          <div style={{ marginBottom: '10px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-              <span style={{ fontSize: '10px', color: COLORS.gray400, fontWeight: '600' }}>Taux d'épargne</span>
-              <span style={{ fontSize: '10px', fontWeight: '700', color: tauxEpargne >= 15 ? COLORS.green : COLORS.amber }}>{tauxEpargne}% <span style={{ color: COLORS.gray400, fontWeight: '400' }}>(obj. 15-20%)</span></span>
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', marginBottom: '10px' }}>
+            <div style={{ fontSize: '22px', fontWeight: '800', color: epargne >= 0 ? COLORS.green : COLORS.red, marginBottom: '6px' }}>
+              <AnimatedNumber value={epargne} /> <span style={{ fontSize: '13px', fontWeight: '400', color: COLORS.gray400 }}>EUR</span>
             </div>
-            <div style={{ height: '4px', borderRadius: '3px', background: COLORS.gray200, overflow: 'hidden' }}>
-              <div style={{ height: '100%', borderRadius: '3px', width: `${Math.min(tauxEpargne, 30) / 30 * 100}%`, background: tauxEpargne >= 15 ? COLORS.green : COLORS.amber, transition: 'width 0.6s ease' }} />
+            <div style={{ width: '100%' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+                <span style={{ fontSize: '10px', color: COLORS.gray400, fontWeight: '600' }}>Taux d'épargne</span>
+                <span style={{ fontSize: '10px', fontWeight: '700', color: tauxEpargne >= 15 ? COLORS.green : COLORS.amber }}>{tauxEpargne}% <span style={{ color: COLORS.gray400, fontWeight: '400' }}>(obj. 15-20%)</span></span>
+              </div>
+              <div style={{ height: '4px', borderRadius: '3px', background: COLORS.gray200, overflow: 'hidden' }}>
+                <div style={{ height: '100%', borderRadius: '3px', width: `${Math.min(tauxEpargne, 30) / 30 * 100}%`, background: tauxEpargne >= 15 ? COLORS.green : COLORS.amber, transition: 'width 0.6s ease' }} />
+              </div>
             </div>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
@@ -856,13 +858,13 @@ function DashboardPage({ profil, profilCharge, vueMode, setVueMode, dureeEmprunt
           <div style={{ display: 'flex', gap: '6px', marginBottom: '10px' }}>
             <div style={{ flex: 1, background: COLORS.gray50, borderRadius: '8px', padding: '8px', textAlign: 'center' }}>
               <div style={{ fontSize: '10px', color: COLORS.gray400, fontWeight: '700', letterSpacing: '0.04em', marginBottom: '3px' }}>AVANT IMPÔTS</div>
-              <div style={{ fontSize: '17px', fontWeight: '800', color: tauxEndettement <= 35 ? COLORS.green : COLORS.red }}>
+              <div style={{ fontSize: '18px', fontWeight: '800', color: tauxEndettement <= 35 ? COLORS.green : COLORS.red }}>
                 <AnimatedNumber value={tauxEndettement} suffix="%" />
               </div>
             </div>
             <div style={{ flex: 1, background: COLORS.purpleLight, borderRadius: '8px', padding: '8px', textAlign: 'center' }}>
               <div style={{ fontSize: '10px', color: COLORS.purple, fontWeight: '700', letterSpacing: '0.04em', marginBottom: '3px' }}>APRÈS IMPÔTS</div>
-              <div style={{ fontSize: '17px', fontWeight: '800', color: tauxEndettementApresImpots <= 35 ? COLORS.green : COLORS.red }}>
+              <div style={{ fontSize: '18px', fontWeight: '800', color: tauxEndettementApresImpots <= 35 ? COLORS.green : COLORS.red }}>
                 <AnimatedNumber value={tauxEndettementApresImpots} suffix="%" />
               </div>
             </div>
@@ -878,8 +880,9 @@ function DashboardPage({ profil, profilCharge, vueMode, setVueMode, dureeEmprunt
           <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', color: COLORS.gray400, marginBottom: '10px' }}>
             <span>0%</span><span>35%</span><span>50%</span><span>100%</span>
           </div>
-          <div style={{ fontSize: '10px', color: COLORS.gray400, fontWeight: '700', letterSpacing: '0.06em', marginBottom: '5px' }}>RESTE À VIVRE</div>
-          <div style={{ display: 'flex', gap: '6px', marginTop: 'auto' }}>
+          <div style={{ marginTop: 'auto', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+          <div style={{ fontSize: '10px', color: COLORS.gray400, fontWeight: '700', letterSpacing: '0.06em' }}>RESTE À VIVRE</div>
+          <div style={{ display: 'flex', gap: '6px' }}>
             <div style={{ flex: 1, padding: '7px 8px', borderRadius: '8px', background: resteAVivre >= 0 ? COLORS.greenLight : COLORS.redLight }}>
               <div style={{ fontSize: '10px', color: COLORS.gray600, fontWeight: '600' }}>AVANT IMPÔTS</div>
               <div style={{ fontSize: '13px', fontWeight: '700', color: resteAVivre >= 0 ? COLORS.green : COLORS.red }}>
@@ -893,107 +896,115 @@ function DashboardPage({ profil, profilCharge, vueMode, setVueMode, dureeEmprunt
               </div>
             </div>
           </div>
-          <div style={{ fontSize: '10px', color: COLORS.gray400, marginTop: '6px', fontStyle: 'italic', lineHeight: '1.4' }}>
+          <div style={{ fontSize: '10px', color: COLORS.gray400, marginTop: '2px', fontStyle: 'italic', lineHeight: '1.4' }}>
             Calcul indicatif basé sur les données saisies.
+          </div>
           </div>
         </StatCard>
 
         {/* ── REVENUS / DÉPENSES ── */}
         <StatCard title={`Revenus · Dépenses ${vueMode === 'foyer' ? '· Foyer' : ''}`} accent={COLORS.navy}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '7px 10px', background: COLORS.bluePale, border: '1px solid #bfdbfe', borderRadius: '8px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 8px', background: COLORS.bluePale, border: '1px solid #bfdbfe', borderRadius: '8px' }}>
               <div>
                 <div style={{ fontSize: '10px', color: COLORS.blue, fontWeight: '700', letterSpacing: '0.04em' }}>REVENUS AVANT IMPÔTS</div>
-                <div style={{ fontSize: '17px', fontWeight: '800', color: COLORS.navy }}>
-                  <AnimatedNumber value={totalRevenus} /> <span style={{ fontSize: '11px', fontWeight: '400', color: COLORS.gray400 }}>EUR</span>
+                <div style={{ fontSize: '14px', fontWeight: '800', color: COLORS.navy }}>
+                  <AnimatedNumber value={totalRevenus} /> <span style={{ fontSize: '10px', fontWeight: '400', color: COLORS.gray400 }}>EUR</span>
                 </div>
               </div>
-              <div style={{ fontSize: '16px', color: COLORS.blue }}>↑</div>
+              <div style={{ fontSize: '14px', color: COLORS.blue }}>↑</div>
             </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 10px', background: COLORS.redLight, border: '1px solid #fca5a5', borderRadius: '8px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 8px', background: COLORS.redLight, border: '1px solid #fca5a5', borderRadius: '8px' }}>
               <div>
                 <div style={{ fontSize: '10px', color: COLORS.red, fontWeight: '700', letterSpacing: '0.04em' }}>DÉPENSES MENSUELLES</div>
-                <div style={{ fontSize: '15px', fontWeight: '700', color: COLORS.navy }}>
-                  <AnimatedNumber value={totalDepenses} /> <span style={{ fontSize: '11px', fontWeight: '400', color: COLORS.gray400 }}>EUR</span>
+                <div style={{ fontSize: '14px', fontWeight: '700', color: COLORS.navy }}>
+                  <AnimatedNumber value={totalDepenses} /> <span style={{ fontSize: '10px', fontWeight: '400', color: COLORS.gray400 }}>EUR</span>
                 </div>
               </div>
-              <div style={{ fontSize: '14px', color: COLORS.red }}>↓</div>
+              <div style={{ fontSize: '13px', color: COLORS.red }}>↓</div>
             </div>
             {totalImpots > 0 && (
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 10px', background: COLORS.purpleLight, border: '1px solid #e9d5ff', borderRadius: '8px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 8px', background: COLORS.purpleLight, border: '1px solid #e9d5ff', borderRadius: '8px' }}>
                 <div>
                   <div style={{ fontSize: '10px', color: COLORS.purple, fontWeight: '700', letterSpacing: '0.04em' }}>DONT IMPÔTS</div>
-                  <div style={{ fontSize: '15px', fontWeight: '700', color: COLORS.navy }}>
-                    <AnimatedNumber value={totalImpots} /> <span style={{ fontSize: '11px', fontWeight: '400', color: COLORS.gray400 }}>EUR</span>
+                  <div style={{ fontSize: '14px', fontWeight: '700', color: COLORS.navy }}>
+                    <AnimatedNumber value={totalImpots} /> <span style={{ fontSize: '10px', fontWeight: '400', color: COLORS.gray400 }}>EUR</span>
                   </div>
                 </div>
-                <div style={{ fontSize: '13px' }}>🏛</div>
+                <div style={{ fontSize: '12px' }}>🏛</div>
               </div>
             )}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 10px', background: COLORS.amberLight, border: '1px solid #fcd34d', borderRadius: '8px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 8px', background: COLORS.amberLight, border: '1px solid #fcd34d', borderRadius: '8px' }}>
               <div>
                 <div style={{ fontSize: '10px', color: COLORS.amber, fontWeight: '700', letterSpacing: '0.04em' }}>MENSUALITÉS CRÉDITS</div>
-                <div style={{ fontSize: '15px', fontWeight: '700', color: COLORS.navy }}>
-                  <AnimatedNumber value={totalMensualites} /> <span style={{ fontSize: '11px', fontWeight: '400', color: COLORS.gray400 }}>EUR</span>
+                <div style={{ fontSize: '14px', fontWeight: '700', color: COLORS.navy }}>
+                  <AnimatedNumber value={totalMensualites} /> <span style={{ fontSize: '10px', fontWeight: '400', color: COLORS.gray400 }}>EUR</span>
                 </div>
               </div>
-              <div style={{ fontSize: '13px' }}>🏦</div>
+              <div style={{ fontSize: '12px' }}>🏦</div>
             </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '7px 10px', background: '#fca5a5', border: '1px solid #f87171', borderRadius: '8px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 8px', background: '#fca5a5', border: '1px solid #f87171', borderRadius: '8px' }}>
               <div>
                 <div style={{ fontSize: '10px', color: '#991b1b', fontWeight: '700', letterSpacing: '0.04em' }}>DÉPENSES TOTALES</div>
-                <div style={{ fontSize: '17px', fontWeight: '800', color: '#7f1d1d' }}>
-                  <AnimatedNumber value={totalDepenses + totalMensualites + totalImpots} /> <span style={{ fontSize: '11px', fontWeight: '600', color: '#991b1b' }}>EUR</span>
+                <div style={{ fontSize: '14px', fontWeight: '800', color: '#7f1d1d' }}>
+                  <AnimatedNumber value={totalDepenses + totalMensualites + totalImpots} /> <span style={{ fontSize: '10px', fontWeight: '600', color: '#991b1b' }}>EUR</span>
                 </div>
               </div>
-              <div style={{ fontSize: '16px', color: '#dc2626' }}>↓</div>
+              <div style={{ fontSize: '13px', color: '#dc2626' }}>↓</div>
             </div>
           </div>
         </StatCard>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px', alignItems: 'stretch' }}>
-        <div style={{ background: COLORS.white, borderRadius: '16px', padding: '14px', boxShadow: '0 1px 4px rgba(15,39,68,0.08)', overflow: 'hidden' }}>
-          <div style={{ fontSize: '11px', fontWeight: '700', color: COLORS.gray400, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '10px' }}>Répartition des dépenses</div>
+      <div style={{ flex: '1 1 0', display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '10px', alignItems: 'stretch', minHeight: 0 }}>
+
+        {/* ── RÉPARTITION DÉPENSES ── */}
+        <div style={{ background: COLORS.white, borderRadius: '16px', padding: '12px', boxShadow: '0 1px 4px rgba(15,39,68,0.08)', overflow: 'hidden', height: '100%', boxSizing: 'border-box', display: 'flex', flexDirection: 'column' }}>
+          <div style={{ fontSize: '11px', fontWeight: '700', color: COLORS.gray400, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '8px', flexShrink: 0 }}>Répartition des dépenses</div>
           {depensesData.length > 0 ? (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-              <PieChart width={90} height={90}>
-                <Pie data={depensesData} cx={40} cy={40} innerRadius={24} outerRadius={42} dataKey="value" strokeWidth={0}>
-                  {depensesData.map((e, i) => <Cell key={i} fill={e.color} />)}
-                </Pie>
-              </PieChart>
-              <div style={{ fontSize: '11px', display: 'flex', flexDirection: 'column', gap: '4px', flex: 1 }}>
+            <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '16px', flex: 1, minHeight: 0 }}>
+              <div style={{ flexShrink: 0 }}>
+                <PieChart width={130} height={130}>
+                  <Pie data={depensesData} cx={60} cy={60} innerRadius={40} outerRadius={62} dataKey="value" strokeWidth={0}>
+                    {depensesData.map((e, i) => <Cell key={i} fill={e.color} />)}
+                  </Pie>
+                </PieChart>
+              </div>
+              <div style={{ fontSize: '10px', display: 'flex', flexDirection: 'column', gap: '3px', flex: 1, minWidth: 0 }}>
                 {depensesData.map(d => (
                   <div key={d.name} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                      <div style={{ width: '7px', height: '7px', borderRadius: '2px', background: d.color, flexShrink: 0 }} />
-                      <span style={{ color: COLORS.gray600 }}>{d.name}</span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px', minWidth: 0 }}>
+                      <div style={{ width: '6px', height: '6px', borderRadius: '2px', background: d.color, flexShrink: 0 }} />
+                      <span style={{ color: COLORS.gray600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{d.name}</span>
                     </div>
-                    <span style={{ fontWeight: '600', color: COLORS.navy }}>{d.value.toLocaleString()}</span>
+                    <span style={{ fontWeight: '600', color: COLORS.navy, flexShrink: 0, marginLeft: '4px' }}>{d.value.toLocaleString()}</span>
                   </div>
                 ))}
               </div>
             </div>
-          ) : <div style={{ color: COLORS.gray400, fontSize: '13px', textAlign: 'center', padding: '20px' }}>Aucune dépense saisie</div>}
+          ) : <div style={{ color: COLORS.gray400, fontSize: '12px', textAlign: 'center', padding: '16px' }}>Aucune dépense saisie</div>}
         </div>
 
-        <div style={{ background: COLORS.white, borderRadius: '16px', padding: '14px', boxShadow: '0 1px 4px rgba(15,39,68,0.08)', overflow: 'hidden' }}>
-          <div style={{ fontSize: '11px', fontWeight: '700', color: COLORS.gray400, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '10px' }}>Projection épargne</div>
-          <ResponsiveContainer width="100%" height={130}>
-            <LineChart data={patrimoine}>
-              <XAxis dataKey="mois" tick={{ fontSize: 10, fill: COLORS.gray400 }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fontSize: 10, fill: COLORS.gray400 }} axisLine={false} tickLine={false} tickFormatter={v => `${(v / 1000).toFixed(0)}k`} />
-              <Tooltip contentStyle={{ background: COLORS.navy, border: 'none', borderRadius: '8px', color: 'white', fontSize: '12px' }} formatter={v => [`${v.toLocaleString()} EUR`]} />
-              <Line type="monotone" dataKey="valeur" stroke={COLORS.blue} strokeWidth={2.5} dot={false} />
-            </LineChart>
-          </ResponsiveContainer>
+        {/* ── PROJECTION ÉPARGNE ── */}
+        <div style={{ background: COLORS.white, borderRadius: '16px', padding: '12px', boxShadow: '0 1px 4px rgba(15,39,68,0.08)', overflow: 'hidden', height: '100%', boxSizing: 'border-box', display: 'flex', flexDirection: 'column' }}>
+          <div style={{ fontSize: '11px', fontWeight: '700', color: COLORS.gray400, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '8px', flexShrink: 0 }}>Projection épargne</div>
+          <div style={{ flex: 1, minHeight: 0 }}>
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={patrimoine}>
+                <XAxis dataKey="mois" tick={{ fontSize: 10, fill: COLORS.gray400 }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fontSize: 10, fill: COLORS.gray400 }} axisLine={false} tickLine={false} tickFormatter={v => `${(v / 1000).toFixed(0)}k`} />
+                <Tooltip contentStyle={{ background: COLORS.navy, border: 'none', borderRadius: '8px', color: 'white', fontSize: '12px' }} formatter={v => [`${v.toLocaleString()} EUR`]} />
+                <Line type="monotone" dataKey="valeur" stroke={COLORS.blue} strokeWidth={2.5} dot={false} />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
         </div>
 
-        <div style={{ background: COLORS.navy, borderRadius: '16px', padding: '10px', boxShadow: '0 1px 4px rgba(15,39,68,0.08)', overflow: 'hidden' }}>
-          <div style={{ fontSize: '11px', fontWeight: '700', color: COLORS.gray400, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '6px' }}>Capacité d'emprunt</div>
+        {/* ── CAPACITÉ D'EMPRUNT ── */}
+        <div style={{ background: COLORS.navy, borderRadius: '16px', padding: '10px', boxShadow: '0 1px 4px rgba(15,39,68,0.08)', overflow: 'hidden', height: '100%', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+          <div style={{ fontSize: '11px', fontWeight: '700', color: COLORS.gray400, textTransform: 'uppercase', letterSpacing: '0.08em', flexShrink: 0 }}>Capacité d'emprunt</div>
 
-          {/* Type de projet toggle */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '3px', marginBottom: '6px', background: COLORS.navyLight, padding: '3px', borderRadius: '8px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '3px', background: COLORS.navyLight, padding: '3px', borderRadius: '8px', flexShrink: 0 }}>
             {[
               { id: 'principale', label: 'Rés. principale' },
               { id: 'secondaire', label: 'Rés. secondaire' },
@@ -1001,7 +1012,7 @@ function DashboardPage({ profil, profilCharge, vueMode, setVueMode, dureeEmprunt
               { id: 'autre', label: 'Autre crédit' },
             ].map(p => (
               <button key={p.id} onClick={() => setTypeProjet(p.id)} style={{
-                padding: '5px 3px', borderRadius: '5px', border: 'none',
+                padding: '2px 0', borderRadius: '5px', border: 'none',
                 background: typeProjet === p.id ? COLORS.blue : 'transparent',
                 color: typeProjet === p.id ? 'white' : COLORS.gray400,
                 fontWeight: typeProjet === p.id ? '700' : '400',
@@ -1011,74 +1022,61 @@ function DashboardPage({ profil, profilCharge, vueMode, setVueMode, dureeEmprunt
             ))}
           </div>
 
-          {/* Input loyer locatif (Investissement locatif seulement) */}
           {typeProjet === 'locatif' && (
-            <div style={{ marginBottom: '8px', background: COLORS.navyLight, borderRadius: '8px', padding: '7px 10px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span style={{ fontSize: '11px', color: COLORS.gray400, fontWeight: '600', whiteSpace: 'nowrap' }}>Loyer locatif estimé</span>
-              <input
-                type="text" inputMode="numeric"
-                value={loyerLocatif}
-                onChange={e => setLoyerLocatif(e.target.value)}
-                placeholder="ex: 800"
-                style={{
-                  flex: 1, background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)',
-                  borderRadius: '6px', padding: '4px 8px', fontSize: '13px', color: 'white',
-                  outline: 'none', textAlign: 'right', minWidth: 0,
-                }}
-              />
-              <span style={{ fontSize: '11px', color: COLORS.gray400 }}>€/mois</span>
+            <div style={{ background: COLORS.navyLight, borderRadius: '8px', padding: '2px 6px', display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0, height: '24px', boxSizing: 'border-box' }}>
+              <span style={{ fontSize: '10px', color: COLORS.gray400, fontWeight: '600', whiteSpace: 'nowrap' }}>Loyer estimé</span>
+              <input type="text" inputMode="numeric" value={loyerLocatif} onChange={e => setLoyerLocatif(e.target.value)} placeholder="800" style={{ flex: 1, background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '6px', padding: '2px 6px', fontSize: '10px', color: 'white', outline: 'none', textAlign: 'right', minWidth: 0 }} />
+              <span style={{ fontSize: '10px', color: COLORS.gray400 }}>€/mois</span>
             </div>
           )}
 
-          {/* Durée toggle */}
-          <div style={{ display: 'flex', gap: '3px', marginBottom: '7px', background: COLORS.navyLight, padding: '3px', borderRadius: '8px' }}>
+          <div style={{ display: 'flex', gap: '3px', background: COLORS.navyLight, padding: '3px', borderRadius: '8px', flexShrink: 0 }}>
             {[10, 15, 20, 25].map(d => (
               <button key={d} onClick={() => setDureeEmprunt(d)} style={{
-                flex: 1, padding: '4px 0', borderRadius: '6px', border: 'none',
+                flex: 1, padding: '2px 0', borderRadius: '6px', border: 'none',
                 background: dureeEmprunt === d ? 'white' : 'transparent',
                 color: dureeEmprunt === d ? COLORS.navy : COLORS.gray400,
                 fontWeight: dureeEmprunt === d ? '700' : '400',
-                fontSize: '11px', cursor: 'pointer', transition: 'all 0.2s ease'
+                fontSize: '10px', cursor: 'pointer', transition: 'all 0.2s ease'
               }}>{d}ans</button>
             ))}
           </div>
 
-          {/* Résultats */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px', marginBottom: '6px' }}>
-            <div style={{ textAlign: 'center', background: COLORS.navyLight, borderRadius: '8px', padding: '8px' }}>
-              <div style={{ fontSize: '11px', color: COLORS.gray400, marginBottom: '4px' }}>Montant max</div>
-              <div style={{ fontSize: '16px', fontWeight: '800', color: 'white' }}>
-                <AnimatedNumber value={Math.round(capaciteEmpruntProjet / 1000)} suffix="k" />
+          {(() => {
+            const isLocatif = typeProjet === 'locatif'
+            return (
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px', flexShrink: 0 }}>
+              <div style={{ textAlign: 'center', background: COLORS.navyLight, borderRadius: '8px', padding: isLocatif ? '3px 6px' : '6px 8px' }}>
+                <div style={{ fontSize: isLocatif ? '8px' : '9px', color: COLORS.gray400, marginBottom: '2px' }}>Montant max</div>
+                <div style={{ fontSize: isLocatif ? '13px' : '16px', fontWeight: '800', color: 'white' }}>
+                  <AnimatedNumber value={Math.round(capaciteEmpruntProjet / 1000)} suffix="k" />
+                </div>
+                <div style={{ fontSize: isLocatif ? '8px' : '9px', color: COLORS.gray400 }}>EUR</div>
+                <div style={{ fontSize: isLocatif ? '7px' : '8px', color: 'rgba(148,163,184,0.55)', fontStyle: 'italic' }}>(hors assurance)</div>
               </div>
-              <div style={{ fontSize: '10px', color: COLORS.gray400 }}>EUR</div>
-            </div>
-            <div style={{ textAlign: 'center', background: COLORS.navyLight, borderRadius: '8px', padding: '8px' }}>
-              <div style={{ fontSize: '11px', color: COLORS.gray400, marginBottom: '4px' }}>Mensualité max</div>
-              <div style={{ fontSize: '16px', fontWeight: '800', color: 'white' }}>
-                <AnimatedNumber value={mensualiteMaxProjet} />
+              <div style={{ textAlign: 'center', background: COLORS.navyLight, borderRadius: '8px', padding: isLocatif ? '3px 6px' : '6px 8px' }}>
+                <div style={{ fontSize: isLocatif ? '8px' : '9px', color: COLORS.gray400, marginBottom: '2px' }}>Mensualité max</div>
+                <div style={{ fontSize: isLocatif ? '13px' : '16px', fontWeight: '800', color: 'white' }}>
+                  <AnimatedNumber value={mensualiteMaxProjet} />
+                </div>
+                <div style={{ fontSize: isLocatif ? '8px' : '9px', color: COLORS.gray400 }}>EUR/mois</div>
+                <div style={{ fontSize: isLocatif ? '7px' : '8px', color: 'rgba(148,163,184,0.55)', fontStyle: 'italic' }}>(hors assurance)</div>
               </div>
-              <div style={{ fontSize: '10px', color: COLORS.gray400 }}>EUR/mois</div>
             </div>
-          </div>
+            )
+          })()}
 
-          <div style={{ display: 'flex', justifyContent: 'space-between', padding: '5px 8px', background: COLORS.navyLight, borderRadius: '8px', fontSize: '10px', color: COLORS.gray400, marginBottom: '6px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 8px', background: COLORS.navyLight, borderRadius: '8px', fontSize: '9px', color: COLORS.gray400, flexShrink: 0 }}>
             <span>Taux {TAUX_MARCHE[dureeEmprunt]}% · {dureeEmprunt} ans</span>
             <span style={{ fontWeight: '700', color: tauxEndettementResultant <= 35 ? COLORS.green : tauxEndettementResultant <= 42 ? COLORS.amber : COLORS.red }}>
               Endett. {tauxEndettementResultant}%
             </span>
           </div>
 
-          <button
-            onClick={() => { setSimuPrefill(capaciteEmpruntProjet); setActive('Simulations') }}
-            style={{
-              width: '100%', background: COLORS.blue, color: 'white', border: 'none',
-              borderRadius: '8px', padding: '7px', fontSize: '12px', fontWeight: '700',
-              cursor: 'pointer', letterSpacing: '0.02em',
-            }}
-          >
+          <button onClick={() => { setSimuPrefill(capaciteEmpruntProjet); setActive('Simulations') }} style={{ width: '100%', background: COLORS.blue, color: 'white', border: 'none', borderRadius: '8px', padding: '5px', fontSize: '11px', fontWeight: '700', cursor: 'pointer', letterSpacing: '0.02em', flexShrink: 0 }}>
             Simuler mon crédit →
           </button>
-          <div style={{ fontSize: '9px', color: 'rgba(148,163,184,0.65)', lineHeight: '1.5', fontStyle: 'italic' }}>
+          <div style={{ fontSize: '8px', color: 'rgba(148,163,184,0.65)', lineHeight: '1.2', fontStyle: 'italic', flexShrink: 0 }}>
             Estimation indicative — sous réserve d'acceptation par l'établissement prêteur et d'analyse complète de votre dossier.
           </div>
         </div>
@@ -1283,7 +1281,8 @@ export default function App() {
           <div style={{ fontSize: '16px', fontWeight: '800', letterSpacing: '0.05em', color: 'white' }}>BANQUE INSIDE</div>
           <div style={{ fontSize: '11px', color: COLORS.gray400, marginTop: '3px', letterSpacing: '0.08em' }}>ANALYSE FINANCIÈRE</div>
         </div>
-        <nav className="sidebar-nav" style={{ flex: '0 0 auto', padding: '12px 10px', overflowY: 'hidden', scrollbarWidth: 'none' }}>
+        <div style={{ height: '32px', flexShrink: 0 }} />
+        <nav className="sidebar-nav" style={{ flex: '0 0 auto', padding: '0 10px 12px', overflowY: 'hidden', scrollbarWidth: 'none' }}>
           {navItems.map(item => {
             const isActive = active === item.label
             return (
