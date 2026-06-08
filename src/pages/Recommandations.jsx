@@ -92,7 +92,7 @@ function RecoCard({ icon, titre, analyse, pistes, partenaires, color, urgence })
               <div style={{ fontSize: '12px', fontWeight: '700', color: COLORS.gray400, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '10px' }}>
                 Comparer & agir
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '8px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '8px', marginBottom: '8px' }}>
                 {partenaires.map((p, i) => (
                   <a key={i} href={p.lien} target="_blank" rel="noopener noreferrer" style={{
                     display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
@@ -105,8 +105,15 @@ function RecoCard({ icon, titre, analyse, pistes, partenaires, color, urgence })
                   </a>
                 ))}
               </div>
+              <div style={{ fontSize: '11px', color: COLORS.gray400, fontStyle: 'italic', lineHeight: '1.5' }}>
+                🔗 Liens partenaires — nous percevons une commission si vous souscrivez via ces liens, sans coût supplémentaire pour vous.
+              </div>
             </>
           )}
+
+          <div style={{ marginTop: '14px', padding: '10px 12px', background: COLORS.gray50, borderRadius: '8px', fontSize: '11px', color: COLORS.gray400, fontStyle: 'italic', lineHeight: '1.6', borderLeft: `2px solid ${COLORS.gray200}` }}>
+            Ces informations sont génériques et ne tiennent pas compte de l'intégralité de votre situation personnelle. Consultez un conseiller financier agréé avant toute décision.
+          </div>
         </div>
       )}
     </div>
@@ -178,8 +185,8 @@ function genererRecommandations(profil, objectifsSelectionnes) {
       urgence: tauxEndettement < 20 ? 'basse' : tauxEndettement < 35 ? 'moyenne' : 'info',
       titre: 'Souscrire un prêt immobilier',
       analyse: tauxEndettement < 35
-        ? `Votre taux d'endettement actuel est de ${Math.round(tauxEndettement)}%. Vous avez une capacité d'emprunt estimée à ${capacite.toLocaleString()} EUR sur 20 ans au taux actuel du marché.`
-        : `Votre taux d'endettement est de ${Math.round(tauxEndettement)}%, proche ou au-delà de la limite bancaire de 35%. Un projet immobilier nécessiterait d'abord d'alléger vos charges.`,
+        ? `D'après les données saisies, votre taux d'endettement indicatif est de ${Math.round(tauxEndettement)}%. À titre informatif, une capacité d'emprunt approximative de ${capacite.toLocaleString()} EUR sur 20 ans est calculée aux taux de marché en vigueur. Cette estimation ne vaut pas accord de financement.`
+        : `D'après les données saisies, votre taux d'endettement indicatif est de ${Math.round(tauxEndettement)}%, proche ou au-delà de la limite bancaire de 35%. Cette estimation est fournie à titre informatif uniquement. Seul un établissement prêteur peut évaluer votre situation réelle.`,
       pistes: [
         `Simulez votre projet avec plusieurs courtiers pour obtenir le meilleur taux.`,
         `Constituez un apport si possible — 10% minimum est généralement demandé pour couvrir les frais de notaire.`,
@@ -203,7 +210,7 @@ function genererRecommandations(profil, objectifsSelectionnes) {
       color: COLORS.red,
       urgence: tauxEndettement > 35 ? 'haute' : tauxEndettement > 20 ? 'moyenne' : 'basse',
       titre: 'Optimiser vos crédits en cours',
-      analyse: `Vous remboursez actuellement ${Math.round(totalMensualites)} EUR de mensualités. ${tauxEndettement > 35 ? 'Votre taux d\'endettement dépasse 35% — un regroupement de crédits pourrait libérer du pouvoir d\'achat.' : 'Un rachat ou regroupement de crédits pourrait vous permettre de réduire vos mensualités ou votre coût total.'}`,
+      analyse: `D'après les données saisies, vos mensualités s'élèvent à ${Math.round(totalMensualites)} EUR. ${tauxEndettement > 35 ? 'Votre taux d\'endettement indicatif dépasse 35%. Un regroupement de crédits peut, dans certains cas, alléger les mensualités — à évaluer avec un professionnel.' : 'Un rachat ou regroupement de crédits peut, dans certains cas, permettre de réduire les mensualités ou le coût total — à étudier au cas par cas avec un établissement financier.'}`,
       pistes: [
         `Rachat de crédit : si les taux ont baissé depuis votre souscription, une renégociation peut faire économiser des milliers d'euros.`,
         `Regroupement de crédits : fusionner plusieurs crédits en un seul peut réduire la mensualité globale.`,
@@ -227,8 +234,8 @@ function genererRecommandations(profil, objectifsSelectionnes) {
       urgence: epargne < 0 ? 'haute' : tauxEpargne < 10 ? 'moyenne' : 'basse',
       titre: 'Optimiser votre épargne disponible',
       analyse: epargne < 0
-        ? `Votre budget est actuellement déficitaire de ${Math.abs(Math.round(epargne))} EUR par mois. Il est urgent de revoir vos charges avant de penser à épargner.`
-        : `Vous épargnez environ ${Math.round(epargne)} EUR par mois (${Math.round(tauxEpargne)}% de vos revenus). ${tauxEpargne < 15 ? 'L\'objectif recommandé est 15-20% — quelques ajustements peuvent y amener.' : 'Votre taux d\'épargne est bon. Assurez-vous que cet argent travaille au meilleur taux.'}`,
+        ? `D'après les données saisies, le solde mensuel calculé est déficitaire de ${Math.abs(Math.round(epargne))} EUR. Cette estimation indicative suggère de revoir les charges avant d'envisager une épargne supplémentaire. Consultez un professionnel pour une analyse complète.`
+        : `D'après les données saisies, la capacité d'épargne mensuelle calculée est d'environ ${Math.round(epargne)} EUR (${Math.round(tauxEpargne)}% des revenus). Les livrets réglementés (Livret A, LDDS, LEP si éligible) permettent de constituer une épargne de précaution disponible à tout moment.`,
       pistes: [
         `Fonds d'urgence : conservez 3 à 6 mois de dépenses sur un livret accessible (Livret A, LDDS, LEP).`,
         `Automatisez votre épargne avec un virement automatique le jour de la paie.`,
@@ -369,11 +376,17 @@ export default function Recommandations() {
     <div style={{ padding: '28px', maxWidth: '800px', margin: '0 auto', fontFamily: "'Inter', -apple-system, sans-serif" }}>
 
       {/* HEADER */}
-      <div style={{ marginBottom: '28px' }}>
+      <div style={{ marginBottom: '20px' }}>
         <h1 style={{ fontSize: '22px', fontWeight: '700', color: COLORS.navy, margin: '0 0 6px' }}>Recommandations</h1>
         <p style={{ fontSize: '13px', color: COLORS.gray400, margin: 0, lineHeight: '1.6' }}>
-          Sélectionnez vos objectifs pour obtenir des recommandations personnalisées basées sur votre profil financier.
+          Sélectionnez vos objectifs pour accéder à des informations génériques sur les produits financiers disponibles.
         </p>
+      </div>
+
+      {/* ENCADRÉ AFFILIATION */}
+      <div style={{ padding: '12px 16px', background: COLORS.bluePale, borderRadius: '10px', borderLeft: `3px solid ${COLORS.blue}`, marginBottom: '20px', fontSize: '12px', color: COLORS.gray600, lineHeight: '1.7' }}>
+        <strong style={{ color: COLORS.blue }}>Information sur les liens partenaires</strong><br />
+        Certains liens présents sur cette page sont des liens affiliés rémunérés. Cela ne modifie pas l'objectivité des informations présentées. Nous vous redirigeons uniquement vers des plateformes reconnues et réglementées.
       </div>
 
       {/* OBJECTIFS */}

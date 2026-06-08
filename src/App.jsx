@@ -8,6 +8,7 @@ import Login from './pages/Login'
 import PatrimoineNet from './pages/PatrimoineNet'
 import GuideUtilisation from './pages/GuideUtilisation'
 import Recommandations from './pages/Recommandations'
+import MentionsLegales from './pages/MentionsLegales'
 import { supabase } from './supabase'
 import jsPDF from 'jspdf'
 
@@ -625,10 +626,10 @@ function genererPDF(profil, vueMode) {
 function StatCard({ title, children, accent }) {
   return (
     <div style={{
-      background: COLORS.white, borderRadius: '14px', padding: '16px',
+      background: COLORS.white, borderRadius: '14px', padding: '14px',
       boxShadow: '0 1px 4px rgba(15,39,68,0.08), 0 4px 16px rgba(15,39,68,0.04)',
       borderTop: `3px solid ${accent || COLORS.blue}`,
-      display: 'flex', flexDirection: 'column',
+      display: 'flex', flexDirection: 'column', justifyContent: 'space-between', minHeight: 0, flexShrink: 1,
     }}>
       <div style={{ fontSize: '10px', fontWeight: '700', color: COLORS.gray400, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '10px' }}>{title}</div>
       {children}
@@ -753,22 +754,22 @@ function DashboardPage({ profil, profilCharge, vueMode, setVueMode, dureeEmprunt
   const scoreLabel = score >= 70 ? 'Profil solide' : score >= 50 ? 'Profil correct' : 'A améliorer'
 
   return (
-    <div style={{ padding: '20px 24px', display: 'flex', flexDirection: 'column', gap: '16px', background: COLORS.gray50, minHeight: '100%' }}>
+    <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '10px', background: COLORS.gray50 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
-          <h1 style={{ fontSize: '22px', fontWeight: '700', color: COLORS.navy, margin: 0 }}>Tableau de bord</h1>
-          <p style={{ fontSize: '13px', color: COLORS.gray400, margin: '4px 0 0' }}>Vue d'ensemble de votre situation financière</p>
+          <h1 style={{ fontSize: '18px', fontWeight: '700', color: COLORS.navy, margin: 0 }}>Tableau de bord</h1>
+          <p style={{ fontSize: '12px', color: COLORS.gray400, margin: '3px 0 0' }}>Vue d'ensemble de votre situation financière</p>
         </div>
         <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
           {estFoyer && (
             <div style={{ display: 'flex', gap: '8px', background: COLORS.white, padding: '4px', borderRadius: '10px', boxShadow: '0 1px 4px rgba(15,39,68,0.08)' }}>
               {['personnel', 'foyer'].map(mode => (
                 <button key={mode} onClick={() => setVueMode(mode)} style={{
-                  padding: '8px 16px', borderRadius: '8px', border: 'none',
+                  padding: '6px 12px', borderRadius: '8px', border: 'none',
                   background: vueMode === mode ? COLORS.navy : 'transparent',
                   color: vueMode === mode ? 'white' : COLORS.gray600,
                   fontWeight: vueMode === mode ? '600' : '400',
-                  cursor: 'pointer', fontSize: '13px', transition: 'all 0.3s ease'
+                  cursor: 'pointer', fontSize: '12px', transition: 'all 0.3s ease'
                 }}>
                   {mode === 'personnel' ? '👤 Personnel' : '👨‍👩‍👧 Foyer'}
                 </button>
@@ -779,9 +780,9 @@ function DashboardPage({ profil, profilCharge, vueMode, setVueMode, dureeEmprunt
             onClick={() => genererPDF(profil, vueMode)}
             style={{
               display: 'flex', alignItems: 'center', gap: '6px',
-              padding: '8px 16px', borderRadius: '10px', border: 'none',
+              padding: '6px 12px', borderRadius: '10px', border: 'none',
               background: COLORS.navy, color: 'white',
-              fontSize: '13px', fontWeight: '600', cursor: 'pointer',
+              fontSize: '12px', fontWeight: '600', cursor: 'pointer',
               boxShadow: '0 2px 8px rgba(15,39,68,0.2)',
             }}
           >
@@ -794,8 +795,8 @@ function DashboardPage({ profil, profilCharge, vueMode, setVueMode, dureeEmprunt
 
         {/* ── SCORE ── */}
         <StatCard title="Score financier" accent={scoreColor}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
-            <div style={{ position: 'relative', width: '72px', height: '72px', flexShrink: 0 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '10px' }}>
+            <div style={{ position: 'relative', width: '60px', height: '60px', flexShrink: 0 }}>
               <svg viewBox="0 0 100 100" style={{ width: '100%', height: '100%', transform: 'rotate(-90deg)' }}>
                 <circle cx="50" cy="50" r="40" fill="none" stroke={COLORS.gray200} strokeWidth="10" />
                 <circle cx="50" cy="50" r="40" fill="none" stroke={scoreColor} strokeWidth="10"
@@ -803,49 +804,49 @@ function DashboardPage({ profil, profilCharge, vueMode, setVueMode, dureeEmprunt
                   style={{ transition: 'stroke-dasharray 0.6s ease' }} />
               </svg>
               <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-                <span style={{ fontSize: '20px', fontWeight: '800', color: COLORS.navy }}>{score}</span>
+                <span style={{ fontSize: '17px', fontWeight: '800', color: COLORS.navy }}>{score}</span>
                 <span style={{ fontSize: '10px', color: COLORS.gray400 }}>/100</span>
               </div>
             </div>
             <div>
-              <div style={{ fontSize: '15px', fontWeight: '700', color: scoreColor }}>{scoreLabel}</div>
+              <div style={{ fontSize: '13px', fontWeight: '700', color: scoreColor }}>{scoreLabel}</div>
               <div style={{ fontSize: '11px', color: COLORS.gray400, marginTop: '3px' }}>Indice de santé financière</div>
             </div>
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginTop: 'auto' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 10px', background: tauxEpargne >= 15 ? COLORS.greenLight : COLORS.amberLight, borderRadius: '8px' }}>
-              <span style={{ fontSize: '11px', color: COLORS.gray600, fontWeight: '600' }}>Taux d'épargne</span>
-              <span style={{ fontSize: '13px', fontWeight: '800', color: tauxEpargne >= 15 ? COLORS.green : COLORS.amber }}>{tauxEpargne}%</span>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '5px 8px', background: tauxEpargne >= 15 ? COLORS.greenLight : COLORS.amberLight, borderRadius: '7px' }}>
+              <span style={{ fontSize: '10px', color: COLORS.gray600, fontWeight: '600' }}>Taux d'épargne</span>
+              <span style={{ fontSize: '12px', fontWeight: '800', color: tauxEpargne >= 15 ? COLORS.green : COLORS.amber }}>{tauxEpargne}%</span>
             </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 10px', background: tauxEndettement <= 35 ? COLORS.greenLight : COLORS.redLight, borderRadius: '8px' }}>
-              <span style={{ fontSize: '11px', color: COLORS.gray600, fontWeight: '600' }}>Taux d'endettement</span>
-              <span style={{ fontSize: '13px', fontWeight: '800', color: tauxEndettement <= 35 ? COLORS.green : COLORS.red }}>{tauxEndettement}%</span>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '5px 8px', background: tauxEndettement <= 35 ? COLORS.greenLight : COLORS.redLight, borderRadius: '7px' }}>
+              <span style={{ fontSize: '10px', color: COLORS.gray600, fontWeight: '600' }}>Taux d'endettement</span>
+              <span style={{ fontSize: '12px', fontWeight: '800', color: tauxEndettement <= 35 ? COLORS.green : COLORS.red }}>{tauxEndettement}%</span>
             </div>
           </div>
         </StatCard>
 
         {/* ── ÉPARGNE ── */}
         <StatCard title={`Épargne mensuelle ${vueMode === 'foyer' ? '· Foyer' : ''}`} accent={epargne >= 0 ? COLORS.green : COLORS.red}>
-          <div style={{ fontSize: '26px', fontWeight: '800', color: epargne >= 0 ? COLORS.green : COLORS.red, marginBottom: '6px' }}>
+          <div style={{ fontSize: '22px', fontWeight: '800', color: epargne >= 0 ? COLORS.green : COLORS.red, marginBottom: '4px' }}>
             <AnimatedNumber value={epargne} /> <span style={{ fontSize: '13px', fontWeight: '400', color: COLORS.gray400 }}>EUR</span>
           </div>
-          <div style={{ marginBottom: '12px' }}>
+          <div style={{ marginBottom: '10px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-              <span style={{ fontSize: '11px', color: COLORS.gray400, fontWeight: '600' }}>Taux d'épargne</span>
-              <span style={{ fontSize: '11px', fontWeight: '700', color: tauxEpargne >= 15 ? COLORS.green : COLORS.amber }}>{tauxEpargne}% <span style={{ color: COLORS.gray400, fontWeight: '400' }}>(obj. 15-20%)</span></span>
+              <span style={{ fontSize: '10px', color: COLORS.gray400, fontWeight: '600' }}>Taux d'épargne</span>
+              <span style={{ fontSize: '10px', fontWeight: '700', color: tauxEpargne >= 15 ? COLORS.green : COLORS.amber }}>{tauxEpargne}% <span style={{ color: COLORS.gray400, fontWeight: '400' }}>(obj. 15-20%)</span></span>
             </div>
-            <div style={{ height: '5px', borderRadius: '3px', background: COLORS.gray200, overflow: 'hidden' }}>
+            <div style={{ height: '4px', borderRadius: '3px', background: COLORS.gray200, overflow: 'hidden' }}>
               <div style={{ height: '100%', borderRadius: '3px', width: `${Math.min(tauxEpargne, 30) / 30 * 100}%`, background: tauxEpargne >= 15 ? COLORS.green : COLORS.amber, transition: 'width 0.6s ease' }} />
             </div>
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginTop: 'auto' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 10px', background: COLORS.bluePale, borderRadius: '8px' }}>
-              <span style={{ fontSize: '11px', color: COLORS.gray600, fontWeight: '600' }}>Revenus nets d'impôts</span>
-              <span style={{ fontSize: '12px', fontWeight: '800', color: COLORS.blue }}>{(totalRevenus - totalImpots).toLocaleString()} EUR</span>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '5px 8px', background: COLORS.bluePale, borderRadius: '7px' }}>
+              <span style={{ fontSize: '10px', color: COLORS.gray600, fontWeight: '600' }}>Revenus nets d'impôts</span>
+              <span style={{ fontSize: '11px', fontWeight: '800', color: COLORS.blue }}>{(totalRevenus - totalImpots).toLocaleString()} EUR</span>
             </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 10px', background: epargne >= 0 ? COLORS.greenLight : COLORS.redLight, borderRadius: '8px' }}>
-              <span style={{ fontSize: '11px', color: COLORS.gray600, fontWeight: '600' }}>Projection annuelle</span>
-              <span style={{ fontSize: '12px', fontWeight: '800', color: epargne >= 0 ? COLORS.green : COLORS.red }}>{(epargne * 12).toLocaleString()} EUR</span>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '5px 8px', background: epargne >= 0 ? COLORS.greenLight : COLORS.redLight, borderRadius: '7px' }}>
+              <span style={{ fontSize: '10px', color: COLORS.gray600, fontWeight: '600' }}>Projection annuelle</span>
+              <span style={{ fontSize: '11px', fontWeight: '800', color: epargne >= 0 ? COLORS.green : COLORS.red }}>{(epargne * 12).toLocaleString()} EUR</span>
             </div>
           </div>
         </StatCard>
@@ -855,13 +856,13 @@ function DashboardPage({ profil, profilCharge, vueMode, setVueMode, dureeEmprunt
           <div style={{ display: 'flex', gap: '6px', marginBottom: '10px' }}>
             <div style={{ flex: 1, background: COLORS.gray50, borderRadius: '8px', padding: '8px', textAlign: 'center' }}>
               <div style={{ fontSize: '10px', color: COLORS.gray400, fontWeight: '700', letterSpacing: '0.04em', marginBottom: '3px' }}>AVANT IMPÔTS</div>
-              <div style={{ fontSize: '20px', fontWeight: '800', color: tauxEndettement <= 35 ? COLORS.green : COLORS.red }}>
+              <div style={{ fontSize: '17px', fontWeight: '800', color: tauxEndettement <= 35 ? COLORS.green : COLORS.red }}>
                 <AnimatedNumber value={tauxEndettement} suffix="%" />
               </div>
             </div>
             <div style={{ flex: 1, background: COLORS.purpleLight, borderRadius: '8px', padding: '8px', textAlign: 'center' }}>
               <div style={{ fontSize: '10px', color: COLORS.purple, fontWeight: '700', letterSpacing: '0.04em', marginBottom: '3px' }}>APRÈS IMPÔTS</div>
-              <div style={{ fontSize: '20px', fontWeight: '800', color: tauxEndettementApresImpots <= 35 ? COLORS.green : COLORS.red }}>
+              <div style={{ fontSize: '17px', fontWeight: '800', color: tauxEndettementApresImpots <= 35 ? COLORS.green : COLORS.red }}>
                 <AnimatedNumber value={tauxEndettementApresImpots} suffix="%" />
               </div>
             </div>
@@ -891,6 +892,9 @@ function DashboardPage({ profil, profilCharge, vueMode, setVueMode, dureeEmprunt
                 <AnimatedNumber value={resteAVivreApresImpots} /> EUR
               </div>
             </div>
+          </div>
+          <div style={{ fontSize: '10px', color: COLORS.gray400, marginTop: '6px', fontStyle: 'italic', lineHeight: '1.4' }}>
+            Calcul indicatif basé sur les données saisies.
           </div>
         </StatCard>
 
@@ -948,21 +952,21 @@ function DashboardPage({ profil, profilCharge, vueMode, setVueMode, dureeEmprunt
         </StatCard>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '16px' }}>
-        <div style={{ background: COLORS.white, borderRadius: '16px', padding: '20px', boxShadow: '0 1px 4px rgba(15,39,68,0.08)' }}>
-          <div style={{ fontSize: '11px', fontWeight: '700', color: COLORS.gray400, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '16px' }}>Répartition des dépenses</div>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px', alignItems: 'stretch' }}>
+        <div style={{ background: COLORS.white, borderRadius: '16px', padding: '14px', boxShadow: '0 1px 4px rgba(15,39,68,0.08)', overflow: 'hidden' }}>
+          <div style={{ fontSize: '11px', fontWeight: '700', color: COLORS.gray400, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '10px' }}>Répartition des dépenses</div>
           {depensesData.length > 0 ? (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
-              <PieChart width={110} height={110}>
-                <Pie data={depensesData} cx={50} cy={50} innerRadius={30} outerRadius={50} dataKey="value" strokeWidth={0}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <PieChart width={90} height={90}>
+                <Pie data={depensesData} cx={40} cy={40} innerRadius={24} outerRadius={42} dataKey="value" strokeWidth={0}>
                   {depensesData.map((e, i) => <Cell key={i} fill={e.color} />)}
                 </Pie>
               </PieChart>
-              <div style={{ fontSize: '12px', display: 'flex', flexDirection: 'column', gap: '6px', flex: 1 }}>
+              <div style={{ fontSize: '11px', display: 'flex', flexDirection: 'column', gap: '4px', flex: 1 }}>
                 {depensesData.map(d => (
                   <div key={d.name} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                      <div style={{ width: '8px', height: '8px', borderRadius: '2px', background: d.color }} />
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                      <div style={{ width: '7px', height: '7px', borderRadius: '2px', background: d.color, flexShrink: 0 }} />
                       <span style={{ color: COLORS.gray600 }}>{d.name}</span>
                     </div>
                     <span style={{ fontWeight: '600', color: COLORS.navy }}>{d.value.toLocaleString()}</span>
@@ -970,12 +974,12 @@ function DashboardPage({ profil, profilCharge, vueMode, setVueMode, dureeEmprunt
                 ))}
               </div>
             </div>
-          ) : <div style={{ color: COLORS.gray400, fontSize: '14px', textAlign: 'center', padding: '20px' }}>Aucune dépense saisie</div>}
+          ) : <div style={{ color: COLORS.gray400, fontSize: '13px', textAlign: 'center', padding: '20px' }}>Aucune dépense saisie</div>}
         </div>
 
-        <div style={{ background: COLORS.white, borderRadius: '16px', padding: '20px', boxShadow: '0 1px 4px rgba(15,39,68,0.08)' }}>
-          <div style={{ fontSize: '11px', fontWeight: '700', color: COLORS.gray400, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '16px' }}>Projection épargne</div>
-          <ResponsiveContainer width="100%" height={150}>
+        <div style={{ background: COLORS.white, borderRadius: '16px', padding: '14px', boxShadow: '0 1px 4px rgba(15,39,68,0.08)', overflow: 'hidden' }}>
+          <div style={{ fontSize: '11px', fontWeight: '700', color: COLORS.gray400, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '10px' }}>Projection épargne</div>
+          <ResponsiveContainer width="100%" height={130}>
             <LineChart data={patrimoine}>
               <XAxis dataKey="mois" tick={{ fontSize: 10, fill: COLORS.gray400 }} axisLine={false} tickLine={false} />
               <YAxis tick={{ fontSize: 10, fill: COLORS.gray400 }} axisLine={false} tickLine={false} tickFormatter={v => `${(v / 1000).toFixed(0)}k`} />
@@ -985,11 +989,11 @@ function DashboardPage({ profil, profilCharge, vueMode, setVueMode, dureeEmprunt
           </ResponsiveContainer>
         </div>
 
-        <div style={{ background: COLORS.navy, borderRadius: '16px', padding: '20px', boxShadow: '0 1px 4px rgba(15,39,68,0.08)' }}>
-          <div style={{ fontSize: '11px', fontWeight: '700', color: COLORS.gray400, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '10px' }}>Capacité d'emprunt</div>
+        <div style={{ background: COLORS.navy, borderRadius: '16px', padding: '10px', boxShadow: '0 1px 4px rgba(15,39,68,0.08)', overflow: 'hidden' }}>
+          <div style={{ fontSize: '11px', fontWeight: '700', color: COLORS.gray400, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '6px' }}>Capacité d'emprunt</div>
 
           {/* Type de projet toggle */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '3px', marginBottom: '8px', background: COLORS.navyLight, padding: '3px', borderRadius: '8px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '3px', marginBottom: '6px', background: COLORS.navyLight, padding: '3px', borderRadius: '8px' }}>
             {[
               { id: 'principale', label: 'Rés. principale' },
               { id: 'secondaire', label: 'Rés. secondaire' },
@@ -1027,42 +1031,40 @@ function DashboardPage({ profil, profilCharge, vueMode, setVueMode, dureeEmprunt
           )}
 
           {/* Durée toggle */}
-          <div style={{ display: 'flex', gap: '4px', marginBottom: '10px', background: COLORS.navyLight, padding: '3px', borderRadius: '8px' }}>
+          <div style={{ display: 'flex', gap: '3px', marginBottom: '7px', background: COLORS.navyLight, padding: '3px', borderRadius: '8px' }}>
             {[10, 15, 20, 25].map(d => (
               <button key={d} onClick={() => setDureeEmprunt(d)} style={{
-                flex: 1, padding: '5px 0', borderRadius: '6px', border: 'none',
+                flex: 1, padding: '4px 0', borderRadius: '6px', border: 'none',
                 background: dureeEmprunt === d ? 'white' : 'transparent',
                 color: dureeEmprunt === d ? COLORS.navy : COLORS.gray400,
                 fontWeight: dureeEmprunt === d ? '700' : '400',
-                fontSize: '12px', cursor: 'pointer', transition: 'all 0.2s ease'
+                fontSize: '11px', cursor: 'pointer', transition: 'all 0.2s ease'
               }}>{d}ans</button>
             ))}
           </div>
 
           {/* Résultats */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '8px' }}>
-            <div style={{ textAlign: 'center', background: COLORS.navyLight, borderRadius: '10px', padding: '12px' }}>
-              <div style={{ fontSize: '11px', color: COLORS.gray400, marginBottom: '6px' }}>Montant max</div>
-              <div style={{ fontSize: '18px', fontWeight: '800', color: 'white' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px', marginBottom: '6px' }}>
+            <div style={{ textAlign: 'center', background: COLORS.navyLight, borderRadius: '8px', padding: '8px' }}>
+              <div style={{ fontSize: '11px', color: COLORS.gray400, marginBottom: '4px' }}>Montant max</div>
+              <div style={{ fontSize: '16px', fontWeight: '800', color: 'white' }}>
                 <AnimatedNumber value={Math.round(capaciteEmpruntProjet / 1000)} suffix="k" />
               </div>
-              <div style={{ fontSize: '11px', color: COLORS.gray400 }}>EUR</div>
-              <div style={{ fontSize: '9px', color: 'rgba(148,163,184,0.6)', marginTop: '2px' }}>hors assurance</div>
+              <div style={{ fontSize: '10px', color: COLORS.gray400 }}>EUR</div>
             </div>
-            <div style={{ textAlign: 'center', background: COLORS.navyLight, borderRadius: '10px', padding: '12px' }}>
-              <div style={{ fontSize: '11px', color: COLORS.gray400, marginBottom: '6px' }}>Mensualité max</div>
-              <div style={{ fontSize: '18px', fontWeight: '800', color: 'white' }}>
+            <div style={{ textAlign: 'center', background: COLORS.navyLight, borderRadius: '8px', padding: '8px' }}>
+              <div style={{ fontSize: '11px', color: COLORS.gray400, marginBottom: '4px' }}>Mensualité max</div>
+              <div style={{ fontSize: '16px', fontWeight: '800', color: 'white' }}>
                 <AnimatedNumber value={mensualiteMaxProjet} />
               </div>
-              <div style={{ fontSize: '11px', color: COLORS.gray400 }}>EUR/mois</div>
-              <div style={{ fontSize: '9px', color: 'rgba(148,163,184,0.6)', marginTop: '2px' }}>hors assurance</div>
+              <div style={{ fontSize: '10px', color: COLORS.gray400 }}>EUR/mois</div>
             </div>
           </div>
 
-          <div style={{ display: 'flex', justifyContent: 'space-between', padding: '7px 10px', background: COLORS.navyLight, borderRadius: '8px', fontSize: '11px', color: COLORS.gray400, marginBottom: '8px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', padding: '5px 8px', background: COLORS.navyLight, borderRadius: '8px', fontSize: '10px', color: COLORS.gray400, marginBottom: '6px' }}>
             <span>Taux {TAUX_MARCHE[dureeEmprunt]}% · {dureeEmprunt} ans</span>
             <span style={{ fontWeight: '700', color: tauxEndettementResultant <= 35 ? COLORS.green : tauxEndettementResultant <= 42 ? COLORS.amber : COLORS.red }}>
-              Endett. résultant : {tauxEndettementResultant}%
+              Endett. {tauxEndettementResultant}%
             </span>
           </div>
 
@@ -1070,13 +1072,130 @@ function DashboardPage({ profil, profilCharge, vueMode, setVueMode, dureeEmprunt
             onClick={() => { setSimuPrefill(capaciteEmpruntProjet); setActive('Simulations') }}
             style={{
               width: '100%', background: COLORS.blue, color: 'white', border: 'none',
-              borderRadius: '8px', padding: '9px', fontSize: '12px', fontWeight: '700',
+              borderRadius: '8px', padding: '7px', fontSize: '12px', fontWeight: '700',
               cursor: 'pointer', letterSpacing: '0.02em',
             }}
           >
             Simuler mon crédit →
           </button>
+          <div style={{ fontSize: '9px', color: 'rgba(148,163,184,0.65)', lineHeight: '1.5', fontStyle: 'italic' }}>
+            Estimation indicative — sous réserve d'acceptation par l'établissement prêteur et d'analyse complète de votre dossier.
+          </div>
         </div>
+      </div>
+    </div>
+  )
+}
+
+function MonComptePage({ user, onLogout }) {
+  const [confirm, setConfirm] = useState(null) // null | 'data' | 'account'
+  const [msg, setMsg] = useState('')
+  const [loading, setLoading] = useState(false)
+
+  const telecharger = async () => {
+    const { data } = await supabase.from('profils_financiers').select('*').eq('user_id', user.id).limit(1)
+    if (!data || data.length === 0) { setMsg('Aucune donnée à exporter.'); return }
+    const blob = new Blob([JSON.stringify(data[0], null, 2)], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a'); a.href = url
+    a.download = `banque-inside-${new Date().toISOString().split('T')[0]}.json`
+    a.click(); URL.revokeObjectURL(url)
+  }
+
+  const supprimerDonnees = async () => {
+    setLoading(true)
+    const { error } = await supabase.from('profils_financiers').delete().eq('user_id', user.id)
+    setLoading(false)
+    if (error) { setMsg('Erreur : ' + error.message); return }
+    setMsg('Vos données financières ont été supprimées.'); setConfirm(null)
+  }
+
+  const supprimerCompte = async () => {
+    setLoading(true)
+    await supabase.from('profils_financiers').delete().eq('user_id', user.id)
+    // Nécessite une fonction RPC Postgres avec SECURITY DEFINER :
+    // CREATE OR REPLACE FUNCTION delete_my_account() RETURNS void LANGUAGE plpgsql SECURITY DEFINER AS $$ BEGIN DELETE FROM auth.users WHERE id = auth.uid(); END; $$;
+    try { await supabase.rpc('delete_my_account') } catch {}
+    await supabase.auth.signOut()
+    onLogout()
+  }
+
+  const C = COLORS
+  const btnDanger = { background: C.redLight, color: C.red, border: `1px solid #fca5a5`, borderRadius: '10px', padding: '12px 16px', fontSize: '13px', fontWeight: '600', cursor: 'pointer', width: '100%', textAlign: 'left' }
+  const btnNeutral = { background: C.white, color: C.navy, border: `1.5px solid ${C.gray200}`, borderRadius: '10px', padding: '12px 16px', fontSize: '13px', fontWeight: '600', cursor: 'pointer', width: '100%', textAlign: 'left' }
+
+  return (
+    <div style={{ padding: '28px', maxWidth: '600px', margin: '0 auto', fontFamily: "'Inter', -apple-system, sans-serif" }}>
+      <div style={{ marginBottom: '28px' }}>
+        <h1 style={{ fontSize: '22px', fontWeight: '700', color: C.navy, margin: '0 0 6px' }}>Mon compte</h1>
+        <p style={{ fontSize: '13px', color: C.gray400, margin: 0 }}>Gérez vos données personnelles et votre compte</p>
+      </div>
+
+      {msg && (
+        <div style={{ padding: '12px 16px', borderRadius: '10px', marginBottom: '20px', fontSize: '13px', background: C.greenLight, color: C.green, border: '1px solid #6ee7b7' }}>
+          {msg}
+        </div>
+      )}
+
+      {/* INFOS COMPTE */}
+      <div style={{ background: C.white, borderRadius: '16px', padding: '20px', boxShadow: '0 1px 4px rgba(15,39,68,0.08)', marginBottom: '16px', borderTop: `3px solid ${C.blue}` }}>
+        <div style={{ fontSize: '11px', fontWeight: '700', color: C.gray400, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '10px' }}>Compte connecté</div>
+        <div style={{ fontSize: '14px', fontWeight: '600', color: C.navy }}>{user.email}</div>
+        <div style={{ fontSize: '12px', color: C.gray400, marginTop: '2px' }}>Membre depuis {new Date(user.created_at).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })}</div>
+      </div>
+
+      {/* RGPD */}
+      <div style={{ background: C.white, borderRadius: '16px', padding: '20px', boxShadow: '0 1px 4px rgba(15,39,68,0.08)', marginBottom: '16px', borderTop: `3px solid ${C.green}` }}>
+        <div style={{ fontSize: '11px', fontWeight: '700', color: C.gray400, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '14px' }}>Mes données — Droits RGPD</div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          <button onClick={telecharger} style={btnNeutral}>
+            <span style={{ marginRight: '8px' }}>⬇️</span> Télécharger mes données (JSON)
+            <div style={{ fontSize: '11px', color: C.gray400, fontWeight: '400', marginTop: '2px' }}>Exporte l'ensemble de vos données financières saisies</div>
+          </button>
+          {confirm !== 'data' ? (
+            <button onClick={() => setConfirm('data')} style={btnDanger}>
+              <span style={{ marginRight: '8px' }}>🗑️</span> Supprimer mes données financières
+              <div style={{ fontSize: '11px', color: C.red, fontWeight: '400', opacity: 0.8, marginTop: '2px' }}>Efface votre profil financier sans supprimer le compte</div>
+            </button>
+          ) : (
+            <div style={{ background: C.redLight, borderRadius: '10px', padding: '14px', border: `1px solid #fca5a5` }}>
+              <div style={{ fontSize: '13px', fontWeight: '600', color: C.red, marginBottom: '10px' }}>Confirmer la suppression des données ?</div>
+              <div style={{ fontSize: '12px', color: C.gray600, marginBottom: '12px' }}>Cette action supprimera définitivement toutes vos données financières saisies. Votre compte de connexion reste actif.</div>
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <button onClick={supprimerDonnees} disabled={loading} style={{ flex: 1, background: C.red, color: 'white', border: 'none', borderRadius: '8px', padding: '10px', fontSize: '13px', fontWeight: '700', cursor: 'pointer' }}>
+                  {loading ? 'Suppression...' : 'Oui, supprimer'}
+                </button>
+                <button onClick={() => setConfirm(null)} style={{ flex: 1, background: C.white, color: C.gray600, border: `1px solid ${C.gray200}`, borderRadius: '8px', padding: '10px', fontSize: '13px', cursor: 'pointer' }}>
+                  Annuler
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* SUPPRESSION COMPTE */}
+      <div style={{ background: C.white, borderRadius: '16px', padding: '20px', boxShadow: '0 1px 4px rgba(15,39,68,0.08)', marginBottom: '16px', borderTop: `3px solid ${C.red}` }}>
+        <div style={{ fontSize: '11px', fontWeight: '700', color: C.red, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '14px' }}>Zone dangereuse</div>
+        {confirm !== 'account' ? (
+          <button onClick={() => setConfirm('account')} style={btnDanger}>
+            <span style={{ marginRight: '8px' }}>⚠️</span> Supprimer mon compte définitivement
+            <div style={{ fontSize: '11px', color: C.red, fontWeight: '400', opacity: 0.8, marginTop: '2px' }}>Supprime toutes vos données ET votre compte de connexion</div>
+          </button>
+        ) : (
+          <div style={{ background: C.redLight, borderRadius: '10px', padding: '14px', border: `1px solid #fca5a5` }}>
+            <div style={{ fontSize: '13px', fontWeight: '700', color: C.red, marginBottom: '8px' }}>Êtes-vous sûr(e) ?</div>
+            <div style={{ fontSize: '12px', color: C.gray600, marginBottom: '12px' }}>Cette action supprimera définitivement toutes vos données financières et votre compte. Elle est <strong>irréversible</strong>.</div>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <button onClick={supprimerCompte} disabled={loading} style={{ flex: 1, background: C.red, color: 'white', border: 'none', borderRadius: '8px', padding: '10px', fontSize: '13px', fontWeight: '700', cursor: 'pointer' }}>
+                {loading ? 'Suppression...' : 'Oui, supprimer mon compte'}
+              </button>
+              <button onClick={() => setConfirm(null)} style={{ flex: 1, background: C.white, color: C.gray600, border: `1px solid ${C.gray200}`, borderRadius: '8px', padding: '10px', fontSize: '13px', cursor: 'pointer' }}>
+                Annuler
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )
@@ -1147,6 +1266,8 @@ export default function App() {
       'Alertes': <Alertes />,
       'Recommandations': <Recommandations />,
       'Guide utilisation': <GuideUtilisation />,
+      'Mon compte': <MonComptePage user={user} onLogout={() => setUser(null)} />,
+      'Mentions légales': <MentionsLegales />,
     }
     if (pages[active]) return pages[active]
     if (active === 'Saisie donnees' || active === 'Patrimoine net') return null
@@ -1157,17 +1278,17 @@ export default function App() {
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh', background: COLORS.gray50, fontFamily: "'Inter', -apple-system, sans-serif" }}>
-      <div style={{ width: '260px', background: COLORS.navy, color: 'white', display: window.innerWidth < 768 ? 'none' : 'flex', flexDirection: 'column', flexShrink: 0, position: 'sticky', top: 0, height: '100vh' }}>
-        <div style={{ padding: '24px 20px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+      <div style={{ width: '260px', background: COLORS.navy, color: 'white', display: window.innerWidth < 768 ? 'none' : 'flex', flexDirection: 'column', flexShrink: 0, position: 'sticky', top: 0, height: '100vh', overflow: 'hidden' }}>
+        <div style={{ flexShrink: 0, padding: '12px 16px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
           <div style={{ fontSize: '16px', fontWeight: '800', letterSpacing: '0.05em', color: 'white' }}>BANQUE INSIDE</div>
           <div style={{ fontSize: '11px', color: COLORS.gray400, marginTop: '3px', letterSpacing: '0.08em' }}>ANALYSE FINANCIÈRE</div>
         </div>
-        <nav style={{ flex: 1, padding: '12px 10px', overflowY: 'auto' }}>
+        <nav className="sidebar-nav" style={{ flex: '0 0 auto', padding: '12px 10px', overflowY: 'hidden', scrollbarWidth: 'none' }}>
           {navItems.map(item => {
             const isActive = active === item.label
             return (
               <button key={item.label} onClick={() => setActive(item.label)} style={{
-                width: '100%', textAlign: 'left', padding: '10px 12px', borderRadius: '10px', marginBottom: '2px',
+                width: '100%', textAlign: 'left', padding: '9px 12px', borderRadius: '10px', marginBottom: '2px',
                 background: isActive ? 'rgba(255,255,255,0.1)' : 'transparent',
                 border: isActive ? '1px solid rgba(255,255,255,0.12)' : '1px solid transparent',
                 color: isActive ? 'white' : COLORS.gray400,
@@ -1184,9 +1305,20 @@ export default function App() {
             )
           })}
         </nav>
-        <div style={{ padding: '16px', margin: '10px', background: 'rgba(255,255,255,0.04)', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.06)' }}>
-          <div style={{ fontSize: '11px', fontWeight: '700', color: '#fbbf24', marginBottom: '6px', letterSpacing: '0.05em' }}>💡 CONSEIL DU JOUR</div>
-          <div style={{ fontSize: '12px', color: COLORS.gray400, lineHeight: '1.5' }}>Augmentez votre taux d'épargne mensuel pour optimiser votre patrimoine.</div>
+        <div style={{ flexShrink: 0, padding: '10px 12px', margin: '0 6px 6px', background: 'rgba(255,255,255,0.04)', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.06)' }}>
+          <div style={{ fontSize: '11px', fontWeight: '700', color: '#fbbf24', marginBottom: '4px', letterSpacing: '0.05em' }}>💡 CONSEIL DU JOUR</div>
+          <div style={{ fontSize: '11px', color: COLORS.gray400, lineHeight: '1.4' }}>Augmentez votre taux d'épargne mensuel pour optimiser votre patrimoine.</div>
+        </div>
+        <div style={{ flex: 1 }} />
+        <div style={{ flexShrink: 0, padding: '0 10px 12px', display: 'flex', gap: '4px' }}>
+          {['Mon compte', 'Mentions légales'].map(p => (
+            <button key={p} onClick={() => setActive(p)} style={{
+              flex: 1, background: active === p ? 'rgba(255,255,255,0.08)' : 'transparent',
+              border: 'none', color: COLORS.gray400, cursor: 'pointer',
+              fontSize: '11px', padding: '6px 16px', borderRadius: '6px',
+              transition: 'all 0.2s',
+            }}>{p}</button>
+          ))}
         </div>
       </div>
 
